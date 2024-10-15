@@ -1,0 +1,51 @@
+# Use Case 1, Competency Questions 3b & 5
+# What wells are near locations with a reported PFOA contamination above 4ppt?
+# What wells are hydrologically connected to other wells with a reported contamination of above 10ppt?
+#    NOTE: 200ppt is used in the following query
+# 
+# This should be run from the SAWGraph repository
+
+PREFIX coso: <http://sawgraph.spatialai.org/v1/contaminoso#>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX gwml: <http://www.opengis.net/gwml-main/2.2/>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX me_mgs: <http://sawgraph.spatialai.org/v1/me-mgs#>
+PREFIX me_egad: <http://sawgraph.spatialai.org/v1/me-egad#>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX unit: <http://qudt.org/vocab/unit>
+
+SELECT * WHERE {
+	# Find sample points that are private water supply wells (PWSW)
+    ?samp_pt rdf:type me_egad:EGAD-SamplePoint ;
+             me_egad:samplePointType me_egad:featureType.PWSW .
+	# Find PFOA results for each sample point
+	?obs coso:observedAtSamplePoint ?samp_pt ;
+    	 coso:ofSubstance me_egad:parameter.PFOA_A ;
+    	 sosa:hasResult ?result .
+	# Find numeric results where the unit is ng/L
+    ?result qudt:quantityValue ?quant_val .
+    ?quant_val qudt:numericValue ?num_val ;
+    		   qudt:unit unit:NanoGM-PER-L .
+	# Only consider numeric results above 200 ng/L
+    FILTER(?num_val > 200)
+
+	# Find the S2 cells each sample point is within
+    ?samp_pt kwg-ont:sfWithin ?sp_s2 .
+
+    SERVICE <repository:Hydrology> {
+        SELECT * WHERE {
+			# Find aquifers that intersect the sample point S2 cells
+            ?sp_s2 kwg-ont:sfWithin | kwg-ont:sfOverlaps ?aq .
+            ?aq rdf:type gwml:GW_Aquifer .
+			# Find all of the S2 cells for the discovered aquifers
+            ?aq_s2 kwg-ont:sfWithin | kwg-ont:sfOverlaps ?aq .
+        }
+    }
+
+	# Find wells above the aquifers via S2 cells
+    ?well rdf:type me_mgs:MGS-Well .
+    ?well kwg-ont:sfWithin ?aq_s2 .
+}

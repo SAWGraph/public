@@ -1,0 +1,50 @@
+# Use Case 1, Competency Question 2b
+# What surface water bodies are downstream from landfills or DoD sites?
+# 
+# This should be run from the Hydrology repository
+
+PREFIX fio: <http://sawgraph.spatialai.org/v1/fio#>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX naics: <http://sawgraph.spatialai.org/v1/fio/naics#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX saw_water: <http://sawgraph.spatialai.org/v1/saw_water#>
+PREFIX schema: <https://schema.org/>
+PREFIX us_frs: <http://sawgraph.spatialai.org/v1/us-frs#>
+
+SELECT * WHERE {
+	# Find flowlines
+	# that cross s2 cells with desired facilities in them
+	# and all of the flowlines downstream from it
+	# plus get the type of the flowline
+    ?fl rdf:type hyf:HY_FlowPath ;
+    	kwg-ont:sfCrosses ?fac_s2 ;
+    	hyf:downstreamWaterbodyTC ?fl_ds ;
+        saw_water:hasFTYPE ?fl_type .
+	# Where available, find the names for all flowlines
+    OPTIONAL { ?fl schema:name ?fl_name . }
+    OPTIONAL { ?fl_ds schema:name ?fl_ds_name . }
+	# Get the types of the downstream flowlines
+	# Remove any flowline with type 'Coastline'
+    ?fl_ds saw_water:hasFTYPE ?fl_ds_type .
+    FILTER ( ?fl_type != "Coastline" )
+    FILTER ( ?fl_ds_type != "Coastline" )
+
+    SERVICE <repository:FIO> {
+        SELECT * WHERE {
+			# Find facilities
+			# their NAICS industry code
+			# and their associated s2 cells
+            ?fac rdf:type fio:Facility ;
+                 fio:ofIndustry ?code ;
+                 kwg-ont:sfWithin ?fac_s2  .
+			# Where available, find names for facilities and NAICS codes
+            OPTIONAL { ?fac rdfs:label ?faclabel . }
+            OPTIONAL { ?code rdfs:label ?ind . }
+			# Only keep facilities with these NAICS codes (landfills and DoD sites)
+            FILTER (?code IN (naics:NAICS-Industry-Code-562212, naics:NAICS-Industry-Code-92811, naics:NAICS-Industry-Code-928110))
+        }
+    }
+}

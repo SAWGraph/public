@@ -1,0 +1,44 @@
+# Use Case 1, Competency Question 2
+# What surface water bodies are near (same or neighboring S2 cell) landfills or DoD sites?
+# 
+# This should be run from the FIO repository
+
+PREFIX fio: <http://sawgraph.spatialai.org/v1/fio#>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX naics: <http://sawgraph.spatialai.org/v1/fio/naics#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX schema: <https://schema.org/>
+
+SELECT * WHERE {
+    # Find facilities, their industry codes, and their S2 cells
+    ?fac rdf:type fio:Facility ;
+            fio:ofIndustry ?code ;
+            kwg-ont:sfWithin ?fac_s2 .
+    # If available, find each facility's name and industry.
+    OPTIONAL { ?fac rdfs:label ?faclabel . }
+    OPTIONAL { ?code rdfs:label ?ind . }
+    # Only keep facilities with NAICS codes for landfills or DoD sites
+    FILTER (?code IN (naics:NAICS-Industry-Code-562212, naics:NAICS-Industry-Code-92811, naics:NAICS-Industry-Code-928110))
+
+    SERVICE <repository:S2L13_AdminRegions> {
+        SELECT * WHERE {
+            # For each facility S2 cell, find its neighbors (and add itself to the neighbors)
+            ?fac_s2 rdf:type kwg-ont:S2Cell_Level13 ;
+                    kwg-ont:sfTouches | owl:sameAs ?nbr_s2 .
+        }
+    }
+
+    SERVICE <repository:Hydrology> {
+        SELECT * WHERE {
+            # Find waterbodies and their names
+            ?wb rdf:type hyf:HY_WaterBody ;
+                rdfs:label ?wblabel .
+	    # Determine if the waterbodies overlap S2 cells that contain a landfill or DoD site or a neighboring S2 cell
+            ?nbr_s2 kwg-ont:sfOverlaps ?wb .
+        }
+    }
+}
