@@ -1,0 +1,26 @@
+# Federated queries: FIO with SpatialGraph (S2L13 and AdminRegions)
+# CQ 1
+# Retrieve all landfills (indicated by the six-digit NAICS code 562212) and the town they are located in or close to (may return multiple towns per landfill based on the S2 cell resolution)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX fio: <http://sawgraph.spatialai.org/v1/fio#>
+PREFIX naics: <http://sawgraph.spatialai.org/v1/fio/naics#>
+PREFIX us_frs: <http://sawgraph.spatialai.org/v1/us-frs#>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+
+select ?facility ?code_label ?town ?townlabel where {
+	SERVICE <repository:FIO> {
+    	?facility rdf:type us_frs:EPA-PFAS-Facility ;
+    		fio:ofIndustry naics:NAICS-Industry-Code-562212.
+        ?facility kwg-ont:sfWithin ?s2 .
+	}
+    SERVICE <repository:S2L13_AdminRegions> {
+        # Select towns and find the S2 cells they have in common with waterbodies
+        ?s2 rdf:type kwg-ont:S2Cell_Level13 .
+        ?s2 kwg-ont:sfWithin | kwg-ont:sfOverlaps ?town .
+        ?town rdf:type kwg-ont:AdministrativeRegion_3 ;
+        rdfs:label ?townlabel .
+    }
+
+}

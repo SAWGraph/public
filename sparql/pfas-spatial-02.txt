@@ -1,0 +1,32 @@
+# Test query for federation between SAWGraph test results and S2 spatial graph
+# In Penobscot county, what samples are near what wells?
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+
+PREFIX me_mgs: <http://sawgraph.spatialai.org/v1/me-mgs#>
+
+PREFIX coso: <http://sawgraph.spatialai.org/v1/contaminoso#>
+SELECT ?sp ?sample WHERE {
+    SERVICE <repository:SAWGraph>
+    {
+<http://sawgraph.spatialai.org/v1/me-mgs-data#d.MGS-Well.100542> kwg-ont:sfWithin ?s2cell.
+    }        
+    SERVICE <repository:S2L13_AdminRegions> {
+			?s2cell rdf:type kwg-ont:S2Cell_Level13 .
+        	?s2cell kwg-ont:sfWithin | kwg-ont:sfOverlaps kwgr:administrativeRegion.USA.23019 .
+            ?s2cell kwg-ont:sfTouches ?s2neighbor.
+    }
+    SERVICE <repository:SAWGraph>
+    {
+        {?sp kwg-ont:sfWithin ?s2cell.}
+        UNION
+        {?sp kwg-ont:sfWithin ?s2neighbor.}
+      	?sample a coso:MaterialSample .
+        ?sample coso:fromSamplePoint ?sp .
+          
+    }        
+} 

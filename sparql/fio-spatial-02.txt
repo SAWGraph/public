@@ -1,0 +1,25 @@
+# Federated queries: FIO with SpatialGraph (S2L13 and AdminRegions)
+# CQ 2
+# Retrieve all landfills (indicated by the six-digit NAICS code 562212) and their S2 cell location that are in Penobscot County.)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX fio: <http://sawgraph.spatialai.org/v1/fio#>
+PREFIX naics: <http://sawgraph.spatialai.org/v1/fio/naics#>
+PREFIX us_frs: <http://sawgraph.spatialai.org/v1/us-frs#>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+
+select ?facility ?s2 where {
+	SERVICE <repository:FIO> {
+    	?facility rdf:type us_frs:EPA-PFAS-Facility ;
+    		fio:ofIndustry naics:NAICS-Industry-Code-562212.
+        ?facility kwg-ont:sfWithin ?s2 .
+	}
+    SERVICE <repository:S2L13_AdminRegions> {
+        # Select towns and find the S2 cells they have in common with waterbodies
+        ?s2 rdf:type kwg-ont:S2Cell_Level13 .
+        ?s2 kwg-ont:sfWithin | kwg-ont:sfOverlaps kwgr:administrativeRegion.USA.23019 .
+    }
+
+}

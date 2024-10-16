@@ -1,0 +1,37 @@
+# Example of retrieving all surface water and fish tissue sample results (samplePointTypes me_egad:featureType.PD, me_egad:featureType.RI, me_egad:featureType.LK) from a specific sample point (me_egad_data:samplePoint.105221)
+# This example is of a sample point that is downstream from a Paper Manufacturing Company in Maine.
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX stad: <http://sawgraph.spatialai.org/v1/stad#>
+
+PREFIX coso: <http://sawgraph.spatialai.org/v1/contaminoso#>
+PREFIX saw_water: <http://sawgraph.spatialai.org/v1/saw_water#>
+PREFIX me_egad: <http://sawgraph.spatialai.org/v1/me-egad#>
+PREFIX me_egad_data: <http://sawgraph.spatialai.org/v1/me-egad-data#>
+
+select ?materialSample ?observation  ?sampleType ?substance ?substanceL ?value ?unit
+where  {
+    SERVICE <repository:SAWGraph>
+    {
+        me_egad_data:samplePoint.105221 me_egad:samplePointType ?pointType.
+        #VALUES ?pointType {me_egad:featureType.PD me_egad:featureType.RI me_egad:featureType.LK}
+		#    ?pointType rdfs:label ?ptl.
+        me_egad_data:samplePoint.105221 ^coso:fromSamplePoint ?materialSample.
+        ?observation coso:analyzedSample ?materialSample.
+        ?materialSample coso:ofSampleMaterialType ?st.
+        ?st rdfs:label ?sampleType.
+        ?observation coso:ofSubstance ?substance.
+        ?substance rdfs:label ?substanceL.
+		#Filter to a specific substance: 
+		# ?substance rdfs:label "PERFLUOROOCTANE SULFONIC ACID"
+        ?observation sosa:hasResult ?measure.
+        ?measure qudt:quantityValue ?result.
+        ?result qudt:numericValue ?value.
+        ?result qudt:unit ?unit.
+        FILTER NOT EXISTS{ ?measure a stad:StatisticalAggregateData}
+    }
+} limit 100
+

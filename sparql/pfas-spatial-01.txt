@@ -1,0 +1,21 @@
+# All samples from sample points in Penobscot county
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+PREFIX coso: <http://sawgraph.spatialai.org/v1/contaminoso#>
+
+SELECT DISTINCT ?sample ?sp WHERE {
+    SERVICE <repository:S2L13_AdminRegions> {
+			?s2cell rdf:type kwg-ont:S2Cell_Level13 .
+        	?s2cell kwg-ont:sfWithin | kwg-ont:sfOverlaps kwgr:administrativeRegion.USA.23019 .
+    }
+    SERVICE <repository:SAWGraph>
+    {
+        ?sample a coso:MaterialSample .
+        ?sample coso:fromSamplePoint ?sp .
+        ?sp kwg-ont:sfWithin ?s2cell.
+    }        
+} 
