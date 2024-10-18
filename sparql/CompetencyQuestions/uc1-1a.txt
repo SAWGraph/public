@@ -1,0 +1,33 @@
+# What wells are near (in same s2 cell as)  sources (facilities of concern)?
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX me_egad: <http://sawgraph.spatialai.org/v1/me-egad#>
+PREFIX coso: <http://sawgraph.spatialai.org/v1/contaminoso#>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX me_mgs: <http://sawgraph.spatialai.org/v1/me-mgs#>
+PREFIX us_frs: <http://sawgraph.spatialai.org/v1/us-frs#>
+PREFIX il_isgs: <http://sawgraph.spatialai.org/v1/il-isgs#>
+
+select ?s ?facility ?facilityName where {
+    #SERVICE <repository:SAWGraph>
+    {
+        ?s a me_mgs:MGS-Well . #this is specific to Maine, could also use il_isgs:ISGS-Well    
+        ?s kwg-ont:sfWithin ?s2.
+    }
+    
+    #SERVICE <repository:S2L13_AdminRegions>
+    {
+        ?s2 kwg-ont:cellID ?s2ID.
+        ?s2 kwg-ont:sfTouches ?s2neighbors.
+    }
+    
+    #SERVICE <repository:FIO> 
+    {
+        ?facility rdf:type us_frs:EPA-PFAS-Facility.
+        ?s2neighbors kwg-ont:sfContains ?facility.
+    	?facility rdfs:label ?facilityName.   
+    }
+     
+} group by ?s ?facility ?facilityName 
+limit 100

@@ -11,12 +11,14 @@ PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
 PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
 
 select ?facility ?s2 where {
-	SERVICE <repository:FIO> {
+	#SERVICE <repository:FIO> 
+    {
     	?facility rdf:type us_frs:EPA-PFAS-Facility ;
     		fio:ofIndustry naics:NAICS-Industry-Code-562212.
         ?facility kwg-ont:sfWithin ?s2 .
 	}
-    SERVICE <repository:S2L13_AdminRegions> {
+    #SERVICE <repository:S2L13_AdminRegions> 
+    {
         # Select towns and find the S2 cells they have in common with waterbodies
         ?s2 rdf:type kwg-ont:S2Cell_Level13 .
         ?s2 kwg-ont:sfWithin | kwg-ont:sfOverlaps kwgr:administrativeRegion.USA.23019 .
