@@ -1,0 +1,68 @@
+PREFIX fio: <http://sawgraph.spatialai.org/v1/fio#>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX naics: <http://sawgraph.spatialai.org/v1/fio/naics#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX saw_water: <http://sawgraph.spatialai.org/v1/saw_water#>
+PREFIX schema: <https://schema.org/>
+PREFIX us_frs: <http://sawgraph.spatialai.org/v1/us-frs#>
+PREFIX wdp: <https://www.wikidata.org/wiki/Property:>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT * WHERE {
+    SERVICE <repository:FIO> {
+        SELECT * WHERE {
+            ?fac rdf:type fio:Facility ;
+                 fio:ofIndustry ?code ;
+                 kwg-ont:sfWithin ?fac_s2  ;
+                 geo:hasGeometry/geo:asWKT ?fac_wkt .
+            OPTIONAL { ?fac rdfs:label ?faclabel . }
+            OPTIONAL { ?code rdfs:label ?ind . }
+            FILTER (?code IN (naics:NAICS-Industry-Code-562212, naics:NAICS-Industry-Code-92811, naics:NAICS-Industry-Code-928110))
+            # FILTER (?fac IN (<http://sawgraph.spatialai.org/v1/us-frs-data#d.FRS-Facility.110067529142>))
+        }
+    }
+
+    SERVICE <repository:S2L13_AdminRegions> {
+        SELECT * WHERE {
+            ?fac_s2 rdf:type kwg-ont:S2Cell_Level13 .
+            ?fac_s2 geo:hasGeometry/geo:asWKT ?fac_s2_wkt .
+        }
+    }
+
+    SERVICE <repository:Hydrology> {
+        SELECT * WHERE {
+            ?fl_us rdf:type hyf:HY_FlowPath ;
+            	   kwg-ont:sfCrosses ?fac_s2 ;
+            	   hyf:downstreamWaterbodyTC ?fl_ds ;
+                   saw_water:hasFTYPE ?fl_us_ftype ;
+                   wdp:P2043 ?fl_us_length ;
+            	   geo:hasGeometry/geo:asWKT ?fl_us_wkt .
+            ?fl_ds wdp:P2043 ?fl_ds_length ;
+                   saw_water:hasFTYPE ?fl_ds_ftype ;
+            	   geo:hasGeometry/geo:asWKT ?fl_ds_wkt .
+           OPTIONAL { ?fl_us schema:name ?fl_us_name . }
+           OPTIONAL { ?fl_ds schema:name ?fl_ds_name . }
+            {
+                SELECT ?fl_ds (SUM(?fl_length) AS ?mid_length) WHERE
+                {
+                    ?fl_us rdf:type hyf:HY_FlowPath ;
+                    	   kwg-ont:sfCrosses ?fac_s2 ;
+                    	   hyf:downstreamWaterbodyTC ?fl_ds .
+                    OPTIONAL {
+                        ?fl_us hyf:downstreamWaterbodyTC ?fl .
+                        ?fl hyf:downstreamWaterbodyTC ?fl_ds .
+                        ?fl wdp:P2043 ?fl_length .
+                    }
+                } GROUP BY ?fl_ds
+            }
+            # BIND(?mid_length + ?fl_ds_length AS ?dist)
+            FILTER (?fl_ds_ftype != "Coastline")
+            FILTER (?fl_us_ftype != "Coastline")
+            # FILTER (?dist < "20.0"^^xsd:float)
+            FILTER (?mid_length < "20.0"^^xsd:float)
+        }
+    }
+}
