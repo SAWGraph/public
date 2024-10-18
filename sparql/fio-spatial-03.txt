@@ -1,0 +1,22 @@
+# Retrieve all facilities of a particular set of industries (for example, all power generation facilities as indicated by the four-digit NAICS code 2211) and the county they are located in (Administrative Regions Level 2) for facilities in a specific administrative region (e.g. the state of Illinois, FIPS code 17).
+ 
+
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX us_frs: <http://sawgraph.spatialai.org/v1/us-frs#>
+PREFIX fio: <http://sawgraph.spatialai.org/v1/fio#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX naics: <http://sawgraph.spatialai.org/v1/fio/naics#>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+select * where {
+        ?facility rdf:type us_frs:EPA-PFAS-Facility ;
+    		fio:ofIndustry ?code .
+        	?code 	fio:subcodeOf ?icode ;
+    				rdfs:label ?code_label .
+    	FILTER (?icode IN (naics:NAICS-IndustryGroup-2211))
+		?facility kwg-ont:sfWithin | kwg-ont:sfOverlaps  ?region .
+    SERVICE <repository:S2L13_AdminRegions> {
+		?region rdf:type kwg-ont:AdministrativeRegion_2 .
+        ?region kwg-ont:sfWithin kwgr:administrativeRegion.USA.17 .
+	}
+	}
