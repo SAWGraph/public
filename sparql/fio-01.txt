@@ -1,0 +1,14 @@
+#Find all landfill facilities based on the naics industry code
+PREFIX fio: <http://sawgraph.spatialai.org/v1/fio#>
+PREFIX naics: <http://sawgraph.spatialai.org/v1/fio/naics#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX us_frs: <http://sawgraph.spatialai.org/v1/us-frs#>
+
+SELECT * 
+WHERE {
+            ?landfill rdf:type us_frs:FRS-Facility .
+    		?landfill us_frs:primaryIndustry naics:NAICS-IndustryCode-562212 .
+            ?landfill rdfs:label ?lflabel .
+  			?landfill us_frs:hasFRSId ?frs_id.
+}
