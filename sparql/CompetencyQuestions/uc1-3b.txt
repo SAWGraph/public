@@ -1,0 +1,51 @@
+# Query: What wells are hydrologically connected to PFOA contaminated private water supply wells where results have been above 200 ng/L?
+# Run this from the SAWGraph repository
+# It is an amalgam of
+#    UC1 3b: What wells are near locations with a reported contamination PFOA contamination above 4ppt ?
+#    UC1 5: What wells are hydrologically connected to other wells with a reported contamination of above 10ppt?
+
+PREFIX me_mgs: <http://sawgraph.spatialai.org/v1/me-mgs#>
+PREFIX coso: <http://sawgraph.spatialai.org/v1/contaminoso#>
+PREFIX gwml: <http://www.opengis.net/gwml-main/2.2/>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX me_egad: <http://sawgraph.spatialai.org/v1/me-egad#>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX unit: <http://qudt.org/vocab/unit>
+
+SELECT DISTINCT ?samp_pt ?num_val ?aq ?well WHERE { 
+    # Find EGAD sample points and restrict them to private water supply wells
+    ?samp_pt rdf:type me_egad:EGAD-SamplePoint .
+    ?samp_pt me_egad:samplePointType ?sp_type.
+    ?sp_type rdfs:label 'PRIVATE WATER SUPPLY WELL' .
+    # Find PFOA observations and results for each EGAD sample point
+	?obs coso:observedAtSamplePoint ?samp_pt ;
+    	 coso:ofSubstance me_egad:parameter.PFOA_A ;
+    	 sosa:hasResult ?result .
+    # Find PFOA levels for each result, limiting them to units of ng/L.
+    ?result qudt:quantityValue ?quant_val .
+    ?quant_val qudt:numericValue ?num_val ;
+    		   qudt:unit unit:NanoGM-PER-L .
+    # Keep only results over 200 ng/L PFOA
+    FILTER(?num_val > 200)
+    
+    # Find the S2 cell each private water supply well is within
+    ?samp_pt kwg-ont:sfWithin ?sp_s2 .
+    
+    #SERVICE <repository:Hydrology> 
+    {
+        {SELECT * WHERE {
+            # Find aquifers that are coincident with the private water supply wells using the S2 cells
+            ?sp_s2 kwg-ont:sfWithin | kwg-ont:sfOverlaps ?aq .
+            ?aq rdf:type gwml:GW_Aquifer .
+            # Find all S2 cells that are within or overlap an aquifer
+            ?aq_s2 kwg-ont:sfWithin | kwg-ont:sfOverlaps ?aq .
+        }
+    }
+    
+    # Find all wells that access the aquifers
+    ?well rdf:type me_mgs:MGS-Well .
+    ?well kwg-ont:sfWithin ?aq_s2 .
+} ORDER BY ?samp_pt ?aq ?well
