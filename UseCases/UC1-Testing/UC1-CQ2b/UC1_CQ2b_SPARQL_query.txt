@@ -44,7 +44,7 @@ SELECT * WHERE {
             OPTIONAL { ?fac rdfs:label ?faclabel . }
             OPTIONAL { ?code rdfs:label ?ind . }
 			# Only keep facilities with these NAICS codes (landfills and DoD sites)
-            FILTER (?code IN (naics:NAICS-Industry-Code-562212, naics:NAICS-Industry-Code-92811, naics:NAICS-Industry-Code-928110))
+            FILTER (?code IN (naics:NAICS-IndustryCode-562212, naics:NAICS-IndustryCode-92811, naics:NAICS-IndustryCode-928110))
         }
     }
 }
