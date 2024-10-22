@@ -1,3 +1,8 @@
+# Use Case 1, Competency Question 2c
+# What surface water bodies are downstream at most 20 km from landfills or DoD sites?
+# 
+# This query can be run from any repository
+
 PREFIX fio: <http://sawgraph.spatialai.org/v1/fio#>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
@@ -14,19 +19,24 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 SELECT * WHERE {
     SERVICE <repository:FIO> {
         SELECT * WHERE {
+            # Find facilities,
+            # their NAICS industry code,
+            # and their associated S2 cells
             ?fac rdf:type fio:Facility ;
                  fio:ofIndustry ?code ;
                  kwg-ont:sfWithin ?fac_s2  ;
                  geo:hasGeometry/geo:asWKT ?fac_wkt .
+            # Where available, find names for facilities and NAICS codes
             OPTIONAL { ?fac rdfs:label ?faclabel . }
             OPTIONAL { ?code rdfs:label ?ind . }
-            FILTER (?code IN (naics:NAICS-Industry-Code-562212, naics:NAICS-Industry-Code-92811, naics:NAICS-Industry-Code-928110))
-            # FILTER (?fac IN (<http://sawgraph.spatialai.org/v1/us-frs-data#d.FRS-Facility.110067529142>))
+            # Only keep facilities with these NAICS codes (landfills and DoD sites)
+            FILTER (?code IN (naics:NAICS-IndustryCode-562212, naics:NAICS-IndustryCode-92811, naics:NAICS-IndustryCode-928110))
         }
     }
 
     SERVICE <repository:S2L13_AdminRegions> {
         SELECT * WHERE {
+            # Retrieve S2 cell geometries
             ?fac_s2 rdf:type kwg-ont:S2Cell_Level13 .
             ?fac_s2 geo:hasGeometry/geo:asWKT ?fac_s2_wkt .
         }
@@ -34,23 +44,32 @@ SELECT * WHERE {
 
     SERVICE <repository:Hydrology> {
         SELECT * WHERE {
+            # Find NHD flowlines that cross facility S2 cells
+            # Find all downstream flowlines
+            # Retrieve flowline type, length (km), and geometry
             ?fl_us rdf:type hyf:HY_FlowPath ;
             	   kwg-ont:sfCrosses ?fac_s2 ;
             	   hyf:downstreamWaterbodyTC ?fl_ds ;
                    saw_water:hasFTYPE ?fl_us_ftype ;
                    wdp:P2043 ?fl_us_length ;
             	   geo:hasGeometry/geo:asWKT ?fl_us_wkt .
+            # For downstream flowlines, retrieve flowline type, length (km), and geometry
             ?fl_ds wdp:P2043 ?fl_ds_length ;
                    saw_water:hasFTYPE ?fl_ds_ftype ;
             	   geo:hasGeometry/geo:asWKT ?fl_ds_wkt .
-           OPTIONAL { ?fl_us schema:name ?fl_us_name . }
-           OPTIONAL { ?fl_ds schema:name ?fl_ds_name . }
+            # When available, pull flowline name
+            OPTIONAL { ?fl_us schema:name ?fl_us_name . }
+            OPTIONAL { ?fl_ds schema:name ?fl_ds_name . }
             {
-                SELECT ?fl_ds (SUM(?fl_length) AS ?mid_length) WHERE
+                # Find the overall length of connected flowlines
+                SELECT ?fl_ds (SUM(?fl_length) AS ?total_length) WHERE
                 {
+                    # Find NHD flowlines that cross facility S2 cells
+                    # Find all downstream flowlines
                     ?fl_us rdf:type hyf:HY_FlowPath ;
                     	   kwg-ont:sfCrosses ?fac_s2 ;
                     	   hyf:downstreamWaterbodyTC ?fl_ds .
+                    # Find the lengths of flowlines between the crossing flowline and one of its downstream flowlines
                     OPTIONAL {
                         ?fl_us hyf:downstreamWaterbodyTC ?fl .
                         ?fl hyf:downstreamWaterbodyTC ?fl_ds .
@@ -58,11 +77,11 @@ SELECT * WHERE {
                     }
                 } GROUP BY ?fl_ds
             }
-            # BIND(?mid_length + ?fl_ds_length AS ?dist)
+            # Exclude any flowlines of type "Coastline"
+            # Exclude any flowlines that create connected chains longer than 20 km
             FILTER (?fl_ds_ftype != "Coastline")
             FILTER (?fl_us_ftype != "Coastline")
-            # FILTER (?dist < "20.0"^^xsd:float)
-            FILTER (?mid_length < "20.0"^^xsd:float)
+            FILTER (?total_length < "20.0"^^xsd:float)
         }
     }
 }

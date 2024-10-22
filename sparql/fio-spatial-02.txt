@@ -14,7 +14,7 @@ select ?facility ?s2 where {
 	#SERVICE <repository:FIO> 
     {
     	?facility rdf:type us_frs:EPA-PFAS-Facility ;
-    		fio:ofIndustry naics:NAICS-Industry-Code-562212.
+    		fio:ofIndustry naics:NAICS-IndustryCode-562212.
         ?facility kwg-ont:sfWithin ?s2 .
 	}
     #SERVICE <repository:S2L13_AdminRegions> 
