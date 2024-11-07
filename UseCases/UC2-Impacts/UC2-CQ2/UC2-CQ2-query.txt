@@ -1,0 +1,38 @@
+#Get information about the samples in each county
+query = """
+PREFIX me_mgs: <http://sawgraph.spatialai.org/v1/me-mgs#>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX me_egad: <http://sawgraph.spatialai.org/v1/me-egad#>
+PREFIX coso: <http://sawgraph.spatialai.org/v1/contaminoso#>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+select ?county (count(DISTINCT(?samplepoint)) as ?testedWells) (count(DISTINCT(?sample)) as ?countSamples) (MAX(?concentration) as ?MaxConcentration)
+    where {
+
+    SERVICE <repository:SAWGraph>{
+    #get all samples by county
+        ?sample a me_egad:EGAD-Sample.
+        ?sample coso:fromSamplePoint ?samplepoint.
+        ?samplepoint kwg-ont:sfWithin ?countySub.
+
+    #limit by sample type (private water )
+        ?samplepoint me_egad:samplePointType/rdfs:label ?featuretype.
+	    VALUES ?featuretype {'PRIVATE WATER SUPPLY WELL'}
+    
+    #get their results above selected limit concentration
+    ?sample ^coso:analyzedSample ?observation.
+                ?observation coso:ofSubstance ?substance.
+                ?observation sosa:hasResult ?result.
+                ?result qudt:quantityValue ?qv.
+                ?qv qudt:numericValue ?concentration.
+    }
+    
+    SERVICE <repository:S2L13_AdminRegions>{
+        ?countySub a kwg-ont:AdministrativeRegion_3.
+        ?countySub kwg-ont:administrativePartOf/rdfs:label ?county.
+
+    }} GROUP BY ?county
+ORDER BY DESC(?concentration)
+"""
