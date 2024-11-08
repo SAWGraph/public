@@ -1,0 +1,50 @@
+# Use Case 1: Testing Gaps
+# Competency Question 2a:
+#     Retrieve all landfills in Penobscot county that are near (have touching S2 cell) any waterbody.
+#
+# This should be run from the FIO repository
+
+PREFIX fio: <http://sawgraph.spatialai.org/v1/fio#>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX naics: <http://sawgraph.spatialai.org/v1/fio/naics#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX schema: <https://schema.org/>
+
+SELECT * WHERE {
+	# Find facilities, their industry codes, their S2 cells, and their counties
+    ?fac rdf:type fio:Facility ;
+            fio:ofIndustry ?code ;
+            kwg-ont:sfWithin ?fac_s2 ;
+            kwg-ont:sfWithin ?county .
+	# If available, find each facility's name and industry
+    OPTIONAL { ?fac rdfs:label ?faclabel . }
+    OPTIONAL { ?code rdfs:label ?ind . }
+	# Only keep faciltiies with the NAICS code for landfills
+    FILTER (?code IN (naics:NAICS-IndustryCode-562212))
+
+    SERVICE <repository:S2L13_AdminRegions> {
+        SELECT * WHERE {
+			# For each S2 cell, find its neighbors (and add itself to the neighbors)
+            ?fac_s2 rdf:type kwg-ont:S2Cell_Level13 ;
+            		kwg-ont:sfTouches | owl:sameAs ?nbr_s2 .
+			# Only consider Penobscot County
+            ?county rdf:type kwg-ont:AdministrativeRegion_2 ;
+                    rdfs:label ?county_label .
+            FILTER regex(?county_label, "penobscot", "i")
+        }
+    }
+
+    SERVICE <repository:Hydrology> {
+        SELECT * WHERE {
+			# Find water bodies and their names
+            ?wb rdf:type hyf:HY_WaterBody ;
+                rdfs:label ?wblabel .
+			# Determine if the water bodies overlap S2 cells that contain a landfill or a neighboring S2 cell
+            ?nbr_s2 kwg-ont:sfOverlaps ?wb .
+        }
+    }
+}
