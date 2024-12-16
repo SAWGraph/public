@@ -1,0 +1,15 @@
+# Retrieve all sample points from Maine's EGAD dataset and count how many there are for each type of sample point
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+PREFIX me_egad_data: <http://sawgraph.spatialai.org/v1/me-egad-data#>
+PREFIX me_egad: <http://sawgraph.spatialai.org/v1/me-egad#>
+PREFIX coso: <http://sawgraph.spatialai.org/v1/contaminoso#>
+
+SELECT ?sptype ?typelabel (COUNT(?sp) as ?no_samplepoint) WHERE {
+    # more generally:  #?sp a coso:SamplePoint.
+	?sp rdf:type me_egad:EGAD-SamplePoint.
+    ?sp me_egad:samplePointType ?sptype. 
+    ?sptype rdfs:label ?typelabel.
+} group by ?sptype ?typelabel order by DESC(?no_samplepoint)

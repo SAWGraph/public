@@ -1,0 +1,18 @@
+# Retrieve all marine samplepoints (samplepoints of type MRN) from Maine's EGAD dataset and determine what and how many of each sample type are there
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+PREFIX me_egad_data: <http://sawgraph.spatialai.org/v1/me-egad-data#>
+PREFIX me_egad: <http://sawgraph.spatialai.org/v1/me-egad#>
+PREFIX coso: <http://sawgraph.spatialai.org/v1/contaminoso#>
+
+SELECT ?sampletype (COUNT(?sample) as ?no_samples) WHERE {
+    # more generally:  #?sp a coso:SamplePoint.
+	?sp rdf:type me_egad:EGAD-SamplePoint.
+    ?sp me_egad:samplePointType ?sptype. 
+    VALUES ?sptype {me_egad:featureType.MRN}
+#    ?sptype rdfs:label ?typelabel.
+    ?sample coso:fromSamplePoint ?sp ;
+    	coso:ofSampleMaterialType ?sampletype .
+} group by ?sampletype order by DESC(?no_samples)
