@@ -30,7 +30,7 @@ SELECT * WHERE {
             OPTIONAL { ?fac rdfs:label ?faclabel . }
             OPTIONAL { ?code rdfs:label ?ind . }
             # Only keep facilities with these NAICS codes (landfills and DoD sites)
-            FILTER (?code IN (naics:NAICS-IndustryCode-562212, naics:NAICS-IndustryCode-92811, naics:NAICS-IndustryCode-928110))
+            FILTER (?code IN (naics:NAICS-IndustryCode-562212, naics:NAICS-IndustryCode-928110, naics:NAICS-IndustryCode-92811))
         }
     }
 
@@ -54,34 +54,37 @@ SELECT * WHERE {
                    wdp:P2043 ?fl_us_length ;
             	   geo:hasGeometry/geo:asWKT ?fl_us_wkt .
             # For downstream flowlines, retrieve flowline type, length (km), and geometry
-            ?fl_ds wdp:P2043 ?fl_ds_length ;
+            ?fl_ds rdf:type hyf:HY_FlowPath ;
                    saw_water:hasFTYPE ?fl_ds_ftype ;
+                   wdp:P2043 ?fl_ds_length ;
             	   geo:hasGeometry/geo:asWKT ?fl_ds_wkt .
             # When available, pull flowline name
             OPTIONAL { ?fl_us schema:name ?fl_us_name . }
             OPTIONAL { ?fl_ds schema:name ?fl_ds_name . }
             {
                 # Find the overall length of connected flowlines
-                SELECT ?fl_ds (SUM(?fl_length) AS ?total_length) WHERE
+                SELECT ?fl_us ?fl_ds (SUM(?fl_length) AS ?path_length) (COUNT(?fl_length) AS ?path_segments) WHERE {
                 {
                     # Find NHD flowlines that cross facility S2 cells
                     # Find all downstream flowlines
                     ?fl_us rdf:type hyf:HY_FlowPath ;
                     	   kwg-ont:sfCrosses ?fac_s2 ;
-                    	   hyf:downstreamWaterbodyTC ?fl_ds .
+                    	   hyf:downstreamWaterbodyTC ?fl .
                     # Find the lengths of flowlines between the crossing flowline and one of its downstream flowlines
-                    OPTIONAL {
-                        ?fl_us hyf:downstreamWaterbodyTC ?fl .
-                        ?fl hyf:downstreamWaterbodyTC ?fl_ds .
-                        ?fl wdp:P2043 ?fl_length .
-                    }
-                } GROUP BY ?fl_ds
+                    ?fl rdf:type hyf:HY_FlowPath ;
+                    	hyf:downstreamWaterbodyTC ?fl_ds ;
+                    	saw_water:hasFTYPE ?fl_ftype ;
+                    	wdp:P2043 ?fl_length .
+                    ?fl_ds saw_water:hasFTYPE ?fl_ds_ftype .
+                    FILTER(?fl_ftype != 'Coastline')
+                    FILTER(?fl_ds_ftype != 'Coastline')
+                } GROUP BY ?fl_us ?fl_ds
             }
             # Exclude any flowlines of type "Coastline"
             # Exclude any flowlines that create connected chains longer than 20 km
             FILTER (?fl_ds_ftype != "Coastline")
             FILTER (?fl_us_ftype != "Coastline")
-            FILTER (?total_length < "20.0"^^xsd:float)
+            FILTER (?path_length < "20.0"^^xsd:float)
         }
     }
 }
