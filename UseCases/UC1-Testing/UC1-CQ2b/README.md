@@ -1,6 +1,6 @@
 *Use Case 1*: **Testing**
 
-*Competency Question 2b*: **Retrieve all landfills in Penobscot county that are near (have touching S2 cell) any waterbody.**
+*Competency Question 2b*: **What surface water bodies are downstream from landfills or DoD sites?**
 
 This directory contains 
 - a Colab notebook with a link to open it that contains all code, queries, and visualizations,
