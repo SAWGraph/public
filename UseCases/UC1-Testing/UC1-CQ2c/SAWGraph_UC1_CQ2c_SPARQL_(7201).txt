@@ -1,0 +1,103 @@
+# Use Case 1, Competency Question 2c
+# What surface water bodies are downstream at most 20 km from landfills or DoD sites?
+# 
+# NOTES: This query can be run from any repository
+#        This query only searches within Maine
+#        hyf:downstreamWaterBodyTC can be replaced with hyf:downstreamWaterBody+ to transitively query the flowline network
+#           The first queries implicit triples already inferred within the graph (faster)
+#           The second infers transitivity during the query processing (slower)
+#        Each hyf:HY_FlowPath is defined as being downstream of itself;
+#           therefore, the calculated distances include the initial flowlines as well as the downstream flowlines
+#        It was run successfully on the SAWGraph 7201 instance of GraphDB as configured on January 28, 2025
+
+PREFIX fio: <http://sawgraph.spatialai.org/v1/fio#>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+PREFIX naics: <http://sawgraph.spatialai.org/v1/fio/naics#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX nhdplusv2: <http://nhdplusv2.spatialai.org/v1/nhdplusv2#>
+PREFIX schema: <https://schema.org/>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX us_frs: <http://sawgraph.spatialai.org/v1/us-frs#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT * WHERE {
+    SERVICE <repository:FIO> {
+        SELECT * WHERE {
+			# Find facilities,
+            # their NAICS industry code,
+            # their associated S2 cells, and
+			# their geometries.
+            ?fac rdf:type fio:Facility ;
+                 fio:ofIndustry ?code ;
+                 kwg-ont:sfWithin ?fac_s2  ;
+                 geo:hasGeometry/geo:asWKT ?fac_wkt .
+			# Where available, find names for facilities and NAICS codes
+            OPTIONAL { ?fac rdfs:label ?faclabel . }
+            OPTIONAL { ?code rdfs:label ?ind . }
+			# Only keep facilities with these NAICS codes (landfills and DoD sites)
+            VALUES ?code { naics:NAICS-IndustryCode-562212 naics:NAICS-IndustryCode-928110 naics:NAICS-IndustryCode-92811 }
+        }
+    }
+
+    SERVICE <repository:Spatial> {
+        SELECT * WHERE {
+			# Make sure only S2 cells are considered (not other spatial features),
+			# retrieve S2 cell geometries, and
+			# make sure the S2 cells are within Maine.
+            ?fac_s2 rdf:type kwg-ont:S2Cell_Level13 ;
+                    geo:hasGeometry/geo:asWKT ?fac_s2_wkt ;
+                    kwg-ont:sfWithin kwgr:administrativeRegion.USA.23 .
+        }
+    }
+
+    SERVICE <repository:Hydrology> {
+        SELECT * WHERE {
+			# Find NHD flowlines that cross facility S2 cells
+            # Find all downstream flowlines from those initial flowlines
+            # Retrieve flowline type, length (km), and geometry for each initial flowline
+            ?fl_us rdf:type hyf:HY_FlowPath ;
+            	   kwg-ont:sfCrosses ?fac_s2 ;
+            	   hyf:downstreamWaterBodyTC ?fl_ds ;
+                   nhdplusv2:hasFTYPE ?fl_us_ftype ;
+                   nhdplusv2:hasFlowPathLength ?fl_us_fpl ;
+            	   geo:hasGeometry/geo:asWKT ?fl_us_wkt .
+            ?fl_us_fpl qudt:quantityValue ?fl_us_fpl_qv .
+            ?fl_us_fpl_qv qudt:numericValue ?fl_us_length .
+			# For downstream flowlines, retrieve flowline type, length (km), and geometry
+            ?fl_ds rdf:type hyf:HY_FlowPath ;
+                   nhdplusv2:hasFTYPE ?fl_ds_ftype ;
+                   nhdplusv2:hasFlowPathLength ?fl_ds_fpl ;
+                   geo:hasGeometry/geo:asWKT ?fl_ds_wkt .
+            ?fl_ds_fpl qudt:quantityValue ?fl_ds_fpl_qv .
+            ?fl_ds_fpl_qv qudt:numericValue ?fl_ds_length .
+			# Where available, find flowline names
+            OPTIONAL { ?fl_us schema:name ?fl_us_name . }
+            OPTIONAL { ?fl_ds schema:name ?fl_ds_name . }
+            {
+				# Find the overall length of connected flowlines
+				# Count the number of flowlines downstream from an initial flowline
+                SELECT ?fl_us ?fl_ds (SUM(?fl_length) AS ?path_length) (COUNT(?fl_length) AS ?path_segments) WHERE {
+					# Find NHD flowlines that cross facility S2 cells
+                    # Find all downstream flowlines from those initial flowlines
+                    ?fl_us rdf:type hyf:HY_FlowPath ;
+                    	   kwg-ont:sfCrosses ?fac_s2 ;
+                    	   hyf:downstreamWaterBodyTC ?fl .
+					# Find the lengths of flowlines between the crossing flowline and each of its downstream flowlines
+                    ?fl rdf:type hyf:HY_FlowPath ;
+                    	hyf:downstreamWaterBodyTC ?fl_ds ;
+                    	nhdplusv2:hasFTYPE ?fl_ftype ;
+                    	nhdplusv2:hasFlowPathLength ?fl_fpl .
+                    ?fl_fpl qudt:quantityValue ?fl_fpl_qv .
+                    ?fl_fpl_qv qudt:numericValue ?fl_length .
+                    ?fl_ds nhdplusv2:hasFTYPE ?fl_ds_ftype .
+                } GROUP BY ?fl_us ?fl_ds
+            }
+			# Exclude any flowlines that create connected chains longer than 20 km
+            FILTER (?path_length < "20.0"^^xsd:float)
+        }
+    }
+}
