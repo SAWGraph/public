@@ -1,0 +1,53 @@
+PREFIX coso: <http://sawgraph.spatialai.org/v1/contaminoso#>
+PREFIX fio: <http://sawgraph.spatialai.org/v1/fio#>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+PREFIX me_egad: <http://sawgraph.spatialai.org/v1/me-egad#>
+PREFIX naics: <http://sawgraph.spatialai.org/v1/fio/naics#>
+PREFIX nhdplusv2: <http://nhdplusv2.spatialai.org/v1/nhdplusv2#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX spatial: <http://purl.org/spatialai/spatial/spatial-full#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT * WHERE {
+    SERVICE <repository:FIO> { # B1a: Retrieve  facilities and their locations
+        ?industry fio:subcodeOf naics:NAICS-IndustryGroup-3222 . # Converted Paper Product Manufacturing
+        ?facility_iri a fio:Facility ; # IRI (unique identifier) of each facility
+            rdfs:label ?facility_label ; # Human-readable label (name) of each facility
+            fio:ofIndustry ?industry ; # Filter to selected industry
+            geo:hasGeometry/geo:asWKT ?facility_wkt ; # Facility geometry as WKT string
+            spatial:connectedTo ?s2_cell ; # S2 cell that the facility is located in
+            spatial:connectedTo ?countysub .  # County subdivision the facility is in
+    }
+    SERVICE <repository:Spatial> { # B1b: spatially filter to State of Maine (USA.23)
+        ?countysub a kwg-ont:AdministrativeRegion_3 ;
+            kwg-ont:administrativePartOf+ kwgr:administrativeRegion.USA.23 .
+        ?s2_cell a kwg-ont:S2Cell_Level13 .
+        ?s2_neighborhood kwg-ont:sfTouches | owl:sameAs ?s2_cell ; # Facility S2 cell neighborhood (S2 cell  and its 8 neighbors)
+            geo:hasGeometry/geo:asWKT ?s2_wkt .  # S2 cell geometries for visualization
+        ?s2_ds_reach a kwg-ont:S2Cell_Level13 ; # Downstream S2 cells
+            geo:hasGeometry/geo:asWKT ?s2_ds_reach_wkt . # Downstream S2 geometries
+    }
+    SERVICE <repository:Hydrology> { # B1c: tracing hydrological network downstream
+        ?reach a hyf:HY_FlowPath ;
+        spatial:connectedTo ?s2_neighborhood ; # Stream reaches crossing the facility S2 neighborhoods
+            hyf:downstreamFlowPath+ ?ds_reach . # Downstream stream reaches
+        ?ds_reach geo:hasGeometry/geo:asWKT ?ds_reach_wkt ; # Stream reach geometries
+            spatial:connectedTo ?s2_ds_reach . # S2 cells for downstream stream reaches
+        {
+            SELECT ?reach ?ds_reach (SUM(?fl_length) AS ?path_length) WHERE {
+                ?reach a hyf:HY_FlowPath ;
+                    spatial:connectedTo ?s2_neighborhood ; # Stream reaches crossing the facility S2 cells
+                    hyf:downstreamFlowPath+ ?fl . # Stream reaches between those crossing a facility S2 cell and some downstream reach
+                ?fl a hyf:HY_FlowPath ;
+                    hyf:downstreamFlowPath+ ?ds_reach ; # Last stream reach in a chain starting from a stream reach crossing the facility S2 cells
+                    nhdplusv2:hasFlowPathLength/qudt:quantityValue/qudt:numericValue ?fl_length . # Flow path length
+            } GROUP BY ?reach ?ds_reach
+        } FILTER (?path_length < "20.0"^^xsd:float)
+    }
+}
