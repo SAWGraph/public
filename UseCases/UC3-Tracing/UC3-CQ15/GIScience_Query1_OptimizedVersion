@@ -23,7 +23,7 @@ SELECT * WHERE {
             geo:hasGeometry/geo:asWKT ?facility_wkt ; # Facility geometry as WKT string
             spatial:connectedTo ?s2_cell ; # S2 cell that the facility is located in
             spatial:connectedTo ?countysub .  # County subdivision the facility is in
-        ?s2_cell a kwg-ont:S2Cell_Level13 . # OPTIMIZATION: Query runs more efficiently because we dup;icate S2 class relations in every repository
+        ?s2_cell a kwg-ont:S2Cell_Level13 . # OPTIMIZATION: Query runs more efficiently because we duplicate S2 class relations in every repository
         ?countysub a kwg-ont:AdministrativeRegion_3 . # OPTIMIZATION: Query runs more efficiently because we duplicate administrative region class relations in every repository
     }
     SERVICE <repository:Spatial> { # B1b: spatially filter to State of Maine (USA.23)
@@ -38,6 +38,6 @@ SELECT * WHERE {
             hyf:downstreamFlowPath+ ?ds_reach . # Downstream stream reaches
         ?ds_reach geo:hasGeometry/geo:asWKT ?ds_reach_wkt ; # Stream reach geometries
             spatial:connectedTo ?s2_ds_reach . # S2 cells for downstream stream reaches
-        ?s2_ds_reach a kwg-ont:S2Cell_Level13 ; # Downstream S2 cells; OPTIMIZATION: Query runs more efficiently because we dup;icate S2 class relations in every repository
+        ?s2_ds_reach a kwg-ont:S2Cell_Level13 ; # Downstream S2 cells; OPTIMIZATION: Query runs more efficiently because we duplicate S2 class relations in every repository
     }
 }
