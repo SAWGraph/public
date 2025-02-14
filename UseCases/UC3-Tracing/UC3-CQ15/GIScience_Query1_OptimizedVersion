@@ -34,7 +34,7 @@ SELECT * WHERE {
     }
     SERVICE <repository:Hydrology> { # B1c: tracing hydrological network downstream
         ?reach a hyf:HY_FlowPath ;
-        spatial:connectedTo ?s2_neighborhood ; # Stream reaches crossing the facility S2 neighborhoods
+            spatial:connectedTo ?s2_neighborhood ; # Stream reaches crossing the facility S2 neighborhoods
             hyf:downstreamFlowPath+ ?ds_reach . # Downstream stream reaches
         ?ds_reach geo:hasGeometry/geo:asWKT ?ds_reach_wkt ; # Stream reach geometries
             spatial:connectedTo ?s2_ds_reach . # S2 cells for downstream stream reaches
