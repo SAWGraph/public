@@ -14,7 +14,7 @@ PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX coso: <http://sawgraph.spatialai.org/v1/contaminoso#>
 PREFIX qudt: <http://qudt.org/schema/qudt/>
 
-SELECT * FROM onto:explain {
+SELECT * WHERE {
     SERVICE <repository:FIO> { # B1a: Retrieve  facilities and their locations
         ?industry fio:subcodeOf naics:NAICS-IndustryGroup-3222 . # Converted Paper Product Manufacturing
         ?facility_iri a fio:Facility ; # IRI (unique identifier) of each facility
