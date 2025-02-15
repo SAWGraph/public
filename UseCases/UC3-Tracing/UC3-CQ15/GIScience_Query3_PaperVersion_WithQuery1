@@ -55,4 +55,3 @@ SELECT * WHERE {
             qudt:unit ?unit. # Unit of the quantity
     }
 }
-}
