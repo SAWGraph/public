@@ -1,0 +1,61 @@
+PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX me_egad: <http://sawgraph.spatialai.org/v1/me-egad#>
+PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
+PREFIX spatial: <http://purl.org/spatialai/spatial/spatial-full#>
+PREFIX naics: <http://sawgraph.spatialai.org/v1/fio/naics#>
+PREFIX fio: <http://sawgraph.spatialai.org/v1/fio#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX coso: <http://sawgraph.spatialai.org/v1/contaminoso#>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX uom: <http://www.opengis.net/def/uom/OGC/1.0/>
+PREFIX us_frs: <http://sawgraph.spatialai.org/v1/us-frs#>
+
+SELECT * WHERE {
+    SERVICE <repository:FIO> { # B1a: Retrieve  facilities and their locations
+        ?industry fio:subcodeOf naics:NAICS-IndustryGroup-3222 . # Converted Paper Product Manufacturing
+        ?facility_iri a fio:Facility ; # IRI (unique identifier) of each facility
+            rdfs:label ?facility_label ; # Human-readable label (name) of each facility
+            fio:ofIndustry ?industry ; # Filter to selected industry
+            geo:hasGeometry/geo:asWKT ?facility_wkt. # Facility geometry as WKT string				
+    	#BIND(geof:buffer(?facility_wkt, 0.014) as ?facility_buffer)							#buffer of facility optional for visualization
+        
+    }
+    SERVICE <repository:Spatial> { # B1b: spatially filter to State of Maine (USA.23)
+        VALUES ?state{kwgr:administrativeRegion.USA.23}
+        ?state geo:hasGeometry ?stateGeom.
+        ?facility_wkt geo:sfWithin ?stateGeom. 
+    }
+    SERVICE <repository:Hydrology> { # B1c: tracing hydrological network downstream
+        ?reach a hyf:HY_FlowPath ;
+        		geo:hasGeometry/geo:asWKT ?flowpath_WKT .
+        BIND(geof:distance(?facility_wkt, ?flowpath_WKT) as ?distance1)
+        FILTER(?distance1 < 0.014)
+        ?reach hyf:downstreamWaterBody+ ?ds_reach . # Downstream stream reaches
+        ?ds_reach geo:hasGeometry/geo:asWKT ?ds_reach_wkt . # Stream reach geometries				
+        BIND(geof:buffer(?ds_reach_wkt, 0.014) as ?stream_buffer)								#new buffer of streams
+
+    }
+	SERVICE <repository:SAWGraph> {  # B3a
+        ?sample_point a coso:SamplePoint ;
+        		geo:sfWithin ?stream_buffer ;														#new computation of geo:sfWithin for sample points in the stream buffer
+            	geo:hasGeometry/geo:asWKT ?sample_point_wkt ; # Get samplepoint geometries
+            	me_egad:samplePointType ?sp_type .  # Get samplepoint type
+        VALUES ?sp_type {me_egad:featureType.PD me_egad:featureType.RI me_egad:featureType.LK} . # Filter to relevant samplepoint types
+        ?material_sample coso:fromSamplePoint ?sample_point ;  # Get the associates ample
+            	coso:ofSampleMaterialType ?sample_type . # Identify type of sample
+        # B3b: Identify analyzed PFAS substance and measurement value
+        ?observation coso:analyzedSample ?material_sample ; # Get associated observation 
+            	coso:ofSubstance ?substance ; # Get analyzed kind of PFAS
+            	sosa:hasResult ?measure . # Get result of the observation
+        ?measure qudt:quantityValue ?quantity_v .
+        ?quantity_v qudt:numericValue ?value ; # Numeric value of the quantity
+           		qudt:unit ?unit. # Unit of the quantity
+       
+    }
+}
+                
