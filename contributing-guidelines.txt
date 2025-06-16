@@ -1,0 +1,78 @@
+Each dataset has its own namespace, separate namespaces for TBox and ABox:
+- lower case prefixes
+- ABox with "_data" attached
+@prefix me_egad: <http://sawgraph.spatialai.org/v1/me-egad#> .
+@prefix me_egad_data: <http://sawgraph.spatialai.org/v1/me-egad-data#> .
+@prefix us_wqp: <http://sawgraph.spatialai.org/v1/us-wqp#> .
+@prefix us_wqp_data: <http://sawgraph.spatialai.org/v1/us-wqp-data#> .
+
+Each namespace is its own named graph
+ABox and TBox are their own named graph
+   http://sawgraph.spatialai.org/v1/namedgraph/me-egad
+   http://sawgraph.spatialai.org/v1/namedgraph/me-egad-data
+   http://sawgraph.spatialai.org/v1/namedgraph/me-egad-s2
+
+Class names: camel case, start with upper case, no special symbols except hyphens
+Object and Data properties: camel case, start with lower case
+
+Instances must start with a lower case: attach "d." followed by class name that it is instantiated in followed by "." and unique identifier for the instance among all of that class
+me_egad_data:d.EGAD-Observation.1234 rdf:type me_egad:EGAD-Observation . 
+
+prefix:CLASSNAME_id
+
+egad:Observation/1234
+egad:1234
+
+Current Namespaces:
+@prefix coso:         <http://w3id.org/coso/v1/contaminoso#> .
+@prefix dc:           <http://purl.org/dc/elements/1.1/> .
+@prefix dcgeoid:      <https://datacommons.org/browser/geoId/> .
+@prefix dcterms:      <http://purl.org/dc/terms/> .                            # sawgraph-spatial-ontology.ttl uses terms:
+@prefix example:      <http://example.com/0000003> .
+@prefix fio:          <http://w3id.org/fio/v1/fio#> .
+@prefix gcx_cid:      <https://geoconnex.us/nhdplusv2/comid/> .                # This is temporary and will likely change.
+@prefix geo:          <http://www.opengis.net/ont/geosparql#> .
+@prefix gsmlb:        <http://geosciml.org/def/gsmlb#> .
+@prefix gwml2:        <http://gwml2.org/def/gwml2#> .                          # This does not dereference; FRINK suggests gwml22: <http://www.opengis.net/gwml-main/2.2/>, which also does not dereference
+@prefix hyf:          <https://www.opengis.net/def/schema/hy_features/hyf/> .  # Per FRINK, there are 3 different prefixes: hyf:, hyfa:, and hyfo:.
+@prefix hyfo:         <http://hyfo.spatialai.org/v1/hyfo#> .                   # Per FRINK, this prefix is also used for HY_Features(?)
+@prefix il_isgs:      <http://sawgraph.spatialai.org/v1/il-isgs#> .
+@prefix il_isgs_data: <http://sawgraph.spatialai.org/v1/il-isgs-data#> .
+@prefix kwg-ont:      <http://stko-kwg.geog.ucsb.edu/lod/ontology/> .
+@prefix kwgr:         <http://stko-kwg.geog.ucsb.edu/lod/resource/> .
+@prefix me_egad:      <http://sawgraph.spatialai.org/v1/me-egad#> .
+@prefix me_egad_data: <http://sawgraph.spatialai.org/v1/me-egad-data#> .
+@prefix me_mgs:       <http://sawgraph.spatialai.org/v1/me-mgs#> .
+@prefix me_mgs_data:  <http://sawgraph.spatialai.org/v1/me-mgs-data#> .
+@prefix naics:        <http://sawgraph.spatialai.org/v1/fio/naics#> .
+@prefix nhdplusv2:    <http://nhdplusv2.spatialai.org/v1/nhdplusv2#> .
+@prefix obo:          <http://purl.obolibrary.org/obo/> .
+@prefix owl:          <http://www.w3.org/2002/07/owl#> .
+@prefix pfas:         <http://sawgraph.spatialai.org/v1/pfas#> .
+@prefix prov-o:       <http://www.w3.org/ns/prov#> .
+@prefix psys:         <http://proton.semanticweb.org/protonsys#> .
+@prefix quantitykind: <http://qudt.org/vocab/quantitykind/> .
+@prefix qudt:         <http://qudt.org/schema/qudt/> .
+@prefix rdf:          <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:         <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix saw_geo:      <http://sawgraph.spatialai.org/v1/saw_geo#> .
+@prefix schema:       <https://schema.org/> .
+@prefix sf:           <http://www.opengis.net/ont/sf#> .
+@prefix skos:         <http://www.w3.org/2004/02/skos/core#> .
+@prefix sosa:         <http://www.w3.org/ns/sosa/> .
+@prefix spatial:      <http://purl.org/spatialai/spatial/spatial-full#> .
+@prefix stad:         <http://purl.org/spatialai/stad/v2/core/> .
+@prefix time:         <http://www.w3.org/2006/time#> .
+@prefix unit:         <http://qudt.org/vocab/unit/> .
+@prefix us_frs:       <http://sawgraph.spatialai.org/v1/us-frs#> .
+@prefix us_frs_data:  <http://sawgraph.spatialai.org/v1/us-frs-data#> .
+@prefix us_sdwis:     <http://sawgraph.spatialai.org/v1/us-sdwis#> .
+@prefix vann:         <http://purl.org/vocab/vann/> .
+@prefix wdt:          <https://www.wikidata.org/prop/direct/> .                # See FRINK for additional wikidate prefixes/namespaces (18 in total)
+@prefix xml:          <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd:          <http://www.w3.org/2001/XMLSchema#> .
+
+Old Namespaces (no longer used):
+# @prefix contaminoso:  <http://sawgraph.spatialai.org/v1/contaminoso#> .
+# @prefix me_mgs:       <http://sawgraph.spatialai.org/v1/me_mgs#> .           # This should be replaced wherever it is found (see the version above)
+# @prefix saw_water:    <http://sawgraph.spatialai.org/v1/saw_water#> .        # Replaced by nhdplusv2
