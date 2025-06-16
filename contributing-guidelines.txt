@@ -23,6 +23,11 @@ prefix:CLASSNAME_id
 egad:Observation/1234
 egad:1234
 
+Recommended additions to most repositories in addition to data:
+   us_admin-region_class-statements.zip (Google Drive: https://drive.google.com/file/d/1xM81w-Pxz8bFFKjpwD_oKzHtS1KqhxST/view?usp=drive_link)
+   us_s2-l13_class-statements.zip (Google Drive: https://drive.google.com/file/d/1vRoccOEJjwoeLYHGeUec86W3VsHp9JG9/view?usp=drive_link)
+   sawgraph-spatial-ontology.ttl (Github: https://github.com/SAWGraph/geospatial-kg/blob/main/ontologies/sawgraph-spatial-ontology.ttl)
+
 Current Namespaces:
 @prefix coso:         <http://w3id.org/coso/v1/contaminoso#> .
 @prefix dc:           <http://purl.org/dc/elements/1.1/> .
