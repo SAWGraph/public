@@ -2,36 +2,35 @@
 # This example is of a sample point that is downstream from a Paper Manufacturing Company in Maine.
 
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
 PREFIX qudt: <http://qudt.org/schema/qudt/>
-PREFIX stad: <http://sawgraph.spatialai.org/v1/stad#>
+PREFIX stad: <http://purl.org/spatialai/stad/v2/core/>
 
-PREFIX coso: <http://sawgraph.spatialai.org/v1/contaminoso#>
-PREFIX saw_water: <http://sawgraph.spatialai.org/v1/saw_water#>
-PREFIX me_egad: <http://sawgraph.spatialai.org/v1/me-egad#>
-PREFIX me_egad_data: <http://sawgraph.spatialai.org/v1/me-egad-data#>
+PREFIX coso: <http://w3id.org/coso/v1/contaminoso#>
+PREFIX me_egad: <http://w3id.org/sawgraph/v1/me-egad#>
+PREFIX me_egad_data: <http://w3id.org/sawgraph/v1/me-egad-data#>
 
-select ?materialSample ?observation  ?sampleType ?substance ?substanceL ?value ?unit
+select ?materialSample ?observation  (GROUP_CONCAT(DISTINCT(?sampleType); separator=", ") as ?sampleTypes) ?substance ?substanceL ?value ?unit
 where  {
-    SERVICE <repository:SAWGraph>
+    SERVICE <repository:PFAS>
     {
         me_egad_data:samplePoint.105221 me_egad:samplePointType ?pointType.
         #VALUES ?pointType {me_egad:featureType.PD me_egad:featureType.RI me_egad:featureType.LK}
-		#    ?pointType rdfs:label ?ptl.
+		    #?pointType rdfs:label ?ptl.
         me_egad_data:samplePoint.105221 ^coso:fromSamplePoint ?materialSample.
         ?observation coso:analyzedSample ?materialSample.
-        ?materialSample coso:ofSampleMaterialType ?st.
+        ?materialSample coso:sampleOfMaterialType ?st. # a sample can have multiple types
         ?st rdfs:label ?sampleType.
         ?observation coso:ofSubstance ?substance.
         ?substance rdfs:label ?substanceL.
 		#Filter to a specific substance: 
-		# ?substance rdfs:label "PERFLUOROOCTANE SULFONIC ACID"
-        ?observation sosa:hasResult ?measure.
+		# ?substance rdfs:label "PERFLUOROOCTANE SULFONIC ACID".
+        ?observation coso:hasResult ?measure.
         ?measure qudt:quantityValue ?result.
         ?result qudt:numericValue ?value.
-        ?result qudt:unit ?unit.
-        FILTER NOT EXISTS{ ?measure a stad:StatisticalAggregateData}
+        ?result qudt:hasUnit ?unit.
+        #FILTER NOT EXISTS{ ?measure a stad:StatisticalAggregateData} #remove results that are aggregates
     }
-} limit 100
+} GROUP BY ?materialSample ?observation ?substance ?substanceL ?value ?unit 
+LIMIT 100
 

@@ -1,8 +1,8 @@
 #Get egad samplepoint and their results
 
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
-PREFIX me_egad: <http://sawgraph.spatialai.org/v1/me-egad#>
-PREFIX coso: <http://sawgraph.spatialai.org/v1/contaminoso#>
+PREFIX me_egad: <http://w3id.org/sawgraph/v1/me-egad#>
+PREFIX coso: <http://w3id.org/coso/v1/contaminoso#>
 PREFIX qudt: <http://qudt.org/schema/qudt/>
 select * where {
     ?testPoint a me_egad:EGAD-SamplePoint.
@@ -11,6 +11,6 @@ select * where {
     			?observation coso:ofSubstance ?substance.
         		?observation sosa:hasResult/qudt:quantityValue ?result.
     			?result qudt:numericValue ?concentration.
-    			?result qudt:unit ?unit.
+    			?result qudt:hasUnit ?unit.
     
 } limit 100

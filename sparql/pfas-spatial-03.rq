@@ -8,19 +8,22 @@ PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
 PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
 
 PREFIX me_mgs: <http://sawgraph.spatialai.org/v1/me-mgs#>
+PREFIX coso: <http://w3id.org/coso/v1/contaminoso#>
 
-PREFIX coso: <http://sawgraph.spatialai.org/v1/contaminoso#>
-SELECT ?sp ?sample WHERE {
-    SERVICE <repository:SAWGraph>
+SELECT ?well ?use WHERE {
+    SERVICE <repository:Hydrology>
     {
-<http://sawgraph.spatialai.org/v1/me-mgs-data#d.MGS-Well.100542> kwg-ont:sfWithin ?s2cell.
+        ?well a me_mgs:MGS-Well .
+        ?well me_mgs:hasUse ?use.
+        ?well me_mgs:ofWellType ?wellType.
+        ?well kwg-ont:sfWithin ?s2cell.
     }        
-    SERVICE <repository:S2L13_AdminRegions> {
+    SERVICE <repository:Spatial> {
 			?s2cell rdf:type kwg-ont:S2Cell_Level13 .
         	?s2cell kwg-ont:sfWithin | kwg-ont:sfOverlaps kwgr:administrativeRegion.USA.23019 .
             ?s2cell kwg-ont:sfTouches ?s2neighbor.
     }
-    SERVICE <repository:SAWGraph>
+    SERVICE <repository:PFAS>
     {
         {?sp kwg-ont:sfWithin ?s2cell.}
         UNION

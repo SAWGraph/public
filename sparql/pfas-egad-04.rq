@@ -3,9 +3,9 @@
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-PREFIX me_egad_data: <http://sawgraph.spatialai.org/v1/me-egad-data#>
-PREFIX me_egad: <http://sawgraph.spatialai.org/v1/me-egad#>
-PREFIX coso: <http://sawgraph.spatialai.org/v1/contaminoso#>
+PREFIX me_egad_data: <http://w3id.org/sawgraph/v1/me-egad-data#>
+PREFIX me_egad: <http://w3id.org/sawgraph/v1/me-egad#>
+PREFIX coso: <http://w3id.org/coso/v1/contaminoso#>
 
 SELECT ?sampletype (COUNT(?sample) as ?no_samples) WHERE {
     # more generally:  #?sp a coso:SamplePoint.
@@ -14,5 +14,5 @@ SELECT ?sampletype (COUNT(?sample) as ?no_samples) WHERE {
     VALUES ?sptype {me_egad:featureType.MRN}
 #    ?sptype rdfs:label ?typelabel.
     ?sample coso:fromSamplePoint ?sp ;
-    	coso:ofSampleMaterialType ?sampletype .
+    	coso:sampleOfMaterialType ?sampletype .
 } group by ?sampletype order by DESC(?no_samples)
