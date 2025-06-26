@@ -16,8 +16,9 @@ select * where {
 		?facility kwg-ont:sfWithin | kwg-ont:sfOverlaps  ?region .
     SERVICE <repository:Spatial> {
 		?region rdf:type kwg-ont:AdministrativeRegion_3 .
-		?region kwg-ont:administrativePartOf ?county;
-			rdfs:label ?countyName. 
-        ?county kwg-ont:administrativePartOf kwgr:administrativeRegion.USA.17 .
+		?region kwg-ont:administrativePartOf ?county.
+        ?county kwg-ont:administrativePartOf kwgr:administrativeRegion.USA.23;
+        		rdf:type kwg-ont:AdministrativeRegion_2;
+				rdfs:label ?countyName. 
 	}
 	}
