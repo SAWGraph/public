@@ -17,7 +17,7 @@ select * where {
     SERVICE <repository:Spatial> {
 		?region rdf:type kwg-ont:AdministrativeRegion_3 .
 		?region kwg-ont:administrativePartOf ?county.
-        ?county kwg-ont:administrativePartOf kwgr:administrativeRegion.USA.23;
+        ?county kwg-ont:administrativePartOf kwgr:administrativeRegion.USA.17;
         		rdf:type kwg-ont:AdministrativeRegion_2;
 				rdfs:label ?countyName. 
 	}
