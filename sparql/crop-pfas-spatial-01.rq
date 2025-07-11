@@ -1,0 +1,44 @@
+# Find all S2cells in Androscoggin County, Maine where potatoes were grown in 2021 and where some samplepoints for PFAS samples are located.
+
+PREFIX spatial: <http://purl.org/spatialai/spatial/spatial-full#>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+PREFIX coso: <http://w3id.org/coso/v1/contaminoso#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT DISTINCT ?s2Cell (COUNT(?sp) as ?samplePoints) ?cropType
+WHERE {
+  SERVICE <repository:Spatial> {
+        # Find all S2 cells in Androscoggin County, Maine
+        ?s2Cell spatial:connectedTo kwgr:administrativeRegion.USA.23001.
+  }    
+  SERVICE <repository:PFAS> {
+        # Filter to those S2 cells with some samplepoint
+		?sample a coso:MaterialSample .
+        ?sample coso:fromSamplePoint ?sp .
+        ?sp spatial:connectedTo ?s2Cell.
+  }
+  SERVICE <repository:CropsAndSoil> {
+        # Find all cropland observation collections for each S2 cell
+        ?s2Cell sosa:isFeatureOfInterestOf ?croplandObsCollection .
+        
+        # Ensure the observation collection is for the year 2021
+        ?croplandObsCollection sosa:phenomenonTime kwgr:instant.2021 .
+        ?croplandObsCollection rdf:type kwg-ont:CroplandS2OverlapObservationCollection .
+        
+        # Find all observations for each cropland observation collection
+        ?croplandObsCollection sosa:hasMember ?observation .
+        
+        # Retrieve crop type for each observation
+        ?observation sosa:observedProperty ?observedProperty .
+        ?observedProperty rdfs:label ?cropType .
+        
+        # Filter only the relevant crop types
+        VALUES ?cropType {"potatoes"}
+  }
+
+    
+} GROUP BY ?s2Cell ?cropType
+ORDER BY ?s2Cell
