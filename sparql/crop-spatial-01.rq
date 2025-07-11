@@ -1,3 +1,6 @@
+# Find all S2cells in Androscoggin County, Maine where barley was grown in 2021. 
+
+PREFIX spatial: <http://purl.org/spatialai/spatial/spatial-full#>
 PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
 PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
@@ -6,10 +9,11 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 SELECT DISTINCT ?s2Cell ?cropType
 WHERE {
-    SERVICE <repository:KWG> {
+  SERVICE <repository:Spatial> {
         # Step 1: Find all S2 cells in Androscoggin County, Maine
-        kwgr:administrativeRegion.USA.23001 kwg-ont:sfContains ?s2Cell .
-        
+        ?s2Cell spatial:connectedTo kwgr:administrativeRegion.USA.23001.
+  }    
+  SERVICE <repository:CropsAndSoil> {
         # Step 2: Find all cropland observation collections for each S2 cell
         ?s2Cell sosa:isFeatureOfInterestOf ?croplandObsCollection .
         

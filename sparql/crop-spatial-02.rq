@@ -1,0 +1,23 @@
+# Find all the crops grown in Aroostook County, Maine and their total area
+
+PREFIX spatial: <http://purl.org/spatialai/spatial/spatial-full#>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT ?cropType (SUM(?cropAcreage) as ?totalAcreage)
+WHERE {
+  SERVICE <repository:Spatial> {
+		kwgr:administrativeRegion.USA.23019 spatial:connectedTo ?s2Cell .
+  }
+  SERVICE <repository:CropsAndSoil> {
+ 			?s2Cell sosa:isFeatureOfInterestOf ?col .
+    		?col   sosa:hasMember ?cropObs .
+    		?cropObs sosa:observedProperty ?prop .
+    		?prop rdfs:label ?cropType .
+    		?cropObs sosa:hasSimpleResult ?cropAcreage .
+    } 
+
+} GROUP BY ?cropType ORDER BY DESC(?totalAcreage) limit 1000
