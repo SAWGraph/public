@@ -1,0 +1,63 @@
+# Find all the samples with sample points from Androscoggin County, Maine that are either water or soil samples
+
+PREFIX spatial: <http://purl.org/spatialai/spatial/spatial-full#>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+PREFIX coso: <http://w3id.org/coso/v1/contaminoso#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT DISTINCT ?adminRegion ?townLabel  ?sp ?sampleType
+WHERE {  
+  SERVICE <repository:Spatial> {
+			?adminRegion rdf:type kwg-ont:AdministrativeRegion_3 ;
+    				rdfs:label ?townLabel ;
+    				kwg-ont:administrativePartOf kwgr:administrativeRegion.USA.23001 .
+  }
+  SERVICE <repository:PFAS> {
+        # Filter to those S2 cells with some samplepoint
+		?sample a coso:MaterialSample ;
+        	coso:fromSamplePoint ?sp .
+		# Limit to relevant S2 cells
+        ?sp kwg-ont:sfWithin ?adminRegion.
+		# Find and filter material sample type
+        ?sample coso:sampleOfMaterialType ?st ;
+          	rdf:type ?sampleCategory.
+        VALUES ?samplecategories{coso:WaterSample coso:SoilSample} .
+        ?st rdfs:label ?sampleType.
+        # Limit to Androscoggin County, Maine
+#        ?sp kwg-ont:sfWithin ?adminRegion.
+#        ?adminRegion rdf:type 
+  }
+    
+}
+ORDER BY ?adminRegion
+
+# This is an alternative version of the same query that takes a detour via S2 cells instead of the precomputed relations that are computed directly with the admin regions of level 3
+
+SELECT DISTINCT ?s2Cell  ?sp ?sampleType
+WHERE {  
+  SERVICE <repository:Spatial> {
+			?s2Cell rdf:type kwg-ont:S2Cell_Level13 .
+        	?s2Cell spatial:connectedTo kwgr:administrativeRegion.USA.23001 .
+			#kwgr:administrativeRegion.USA.23001 rdfs:label ?county. 
+  }
+  SERVICE <repository:PFAS> {
+        # Filter to those S2 cells with some samplepoint
+		?sample a coso:MaterialSample ;
+        	coso:fromSamplePoint ?sp .
+		# Limit to relevant S2 cells
+        ?sp spatial:connectedTo ?s2Cell.
+		# Find and filter material sample type
+        ?sample coso:sampleOfMaterialType ?st ;
+          	rdf:type ?sampleCategory.
+        VALUES ?samplecategories{coso:WaterSample coso:SoilSample} .
+        ?st rdfs:label ?sampleType.
+        # Limit to Androscoggin County, Maine
+#        ?sp kwg-ont:sfWithin ?adminRegion.
+#        ?adminRegion rdf:type 
+  }
+    
+}
+ORDER BY ?s2Cell
