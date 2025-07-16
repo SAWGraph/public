@@ -1,0 +1,110 @@
+# Find all the samples with sample points from Androscoggin County, Maine that are either water or soil samples and that tested a single PFAS at a concentration of at least 4 ng/l
+
+PREFIX spatial: <http://purl.org/spatialai/spatial/spatial-full#>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+PREFIX coso: <http://w3id.org/coso/v1/contaminoso#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+
+PREFIX me_egad_data: <http://w3id.org/sawgraph/v1/me-egad-data#>
+PREFIX unit: <http://qudt.org/vocab/unit/>
+SELECT ?adminRegion ?townLabel ?s2Cell ?result WHERE {  
+ 	SERVICE <repository:Spatial> {
+        SELECT * WHERE {
+			?adminRegion rdf:type kwg-ont:AdministrativeRegion_3 ;
+    				rdfs:label ?townLabel ;
+    				kwg-ont:administrativePartOf kwgr:administrativeRegion.USA.23001 .
+        }
+  	}
+  	SERVICE <repository:PFAS> {
+        SELECT * WHERE {
+        # Filter to those S2 cells with some samplepoint
+		?sample a coso:MaterialSample ;
+        	coso:fromSamplePoint ?sp .
+		# Limit to relevant region
+        ?sp kwg-ont:sfWithin ?adminRegion.
+		# Find and filter material sample type
+        ?sample coso:sampleOfMaterialType ?st ;
+          	rdf:type ?sampleCategory.
+        VALUES ?samplecategories{coso:SoilSample coso:WaterSample} .
+        ?st rdfs:label ?sampleType.
+        
+		?observation coso:analyzedSample ?sample ;
+        	coso:ofSubstance ?substance;
+            coso:hasResult ?result .
+         ?result qudt:quantityValue ?quantityValue . 
+         ?quantityValue qudt:numericValue ?quantity ;
+    				qudt:hasUnit ?unit .					 		# in the same unit
+    	VALUES ?unit {unit:NanoGM-PER-L}.        
+        ?result a coso:SingleContaminantMeasurement . #remove results that are aggregates
+        FILTER ( ?quantity > 4)
+
+        # Also retrievel the S2 cells of the relevant samples points for integration with crops 
+        ?sp kwg-ont:sfWithin ?s2Cell.
+		?s2Cell rdf:type kwg-ont:S2Cell_Level13 .        
+        } 
+    }
+} 
+ORDER BY ?adminRegion limit 1000
+
+
+
+
+
+
+# Alternative version that retrieves only distinct S2 cells in the part run on the PFAS graph
+
+PREFIX spatial: <http://purl.org/spatialai/spatial/spatial-full#>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+PREFIX coso: <http://w3id.org/coso/v1/contaminoso#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+
+PREFIX me_egad_data: <http://w3id.org/sawgraph/v1/me-egad-data#>
+PREFIX unit: <http://qudt.org/vocab/unit/>
+SELECT ?adminRegion ?townLabel ?s2Cell ?numExceeds WHERE {  
+ 	SERVICE <repository:Spatial> {
+        SELECT * WHERE {
+			?adminRegion rdf:type kwg-ont:AdministrativeRegion_3 ;
+    				rdfs:label ?townLabel ;
+    				kwg-ont:administrativePartOf kwgr:administrativeRegion.USA.23001 .
+        }
+  	}
+  	SERVICE <repository:PFAS> {
+        SELECT DISTINCT ?adminRegion ?s2Cell (Count(?quantity) as ?numExceeds) WHERE {
+        # Filter to those S2 cells with some samplepoint
+		?sample a coso:MaterialSample ;
+        	coso:fromSamplePoint ?sp .
+		# Limit to relevant region
+        ?sp kwg-ont:sfWithin ?adminRegion.
+		# Find and filter material sample type
+        ?sample coso:sampleOfMaterialType ?st ;
+          	rdf:type ?sampleCategory.
+        VALUES ?samplecategories{coso:SoilSample coso:WaterSample} .
+        ?st rdfs:label ?sampleType.
+        
+		?observation coso:analyzedSample ?sample ;
+        	coso:ofSubstance ?substance;
+            coso:hasResult/qudt:quantityValue ?result. 
+            ?result qudt:numericValue ?quantity ;
+    				qudt:hasUnit ?unit .					 		# in the same unit
+    	VALUES ?unit {unit:NanoGM-PER-L}.        
+        #?result a coso:AggregateContaminantMeasurement .
+        #FILTER NOT EXISTS{ ?result a coso:AggregateContaminantMeasurement} #remove results that are aggregates
+
+        #OPTIONAL {?quantity qudt:numericValue ?quantityValue}
+        FILTER ( ?quantity > 4)
+
+        # Also retrievel the S2 cells of the relevant samples points for integration with crops 
+        ?sp kwg-ont:sfWithin ?s2Cell.
+		?s2Cell rdf:type kwg-ont:S2Cell_Level13 .        
+        } GROUP BY ?adminRegion ?s2Cell
+    }
+} 
+GROUP BY ?adminRegion ?townLabel ?s2Cell ?numExceeds ORDER BY ?adminRegion limit 1000
