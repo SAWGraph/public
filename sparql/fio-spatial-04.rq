@@ -1,0 +1,25 @@
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX fio: <http://w3id.org/fio/v1/fio#>
+PREFIX naics: <http://w3id.org/fio/v1/naics#>
+PREFIX epa-frs: <http://w3id.org/fio/v1/epa-frs#>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+
+# Retrieve all facilities in the NAICS Industry Groups 2211 
+# (Electric Power Generation, Transmission, and Distribution) that are not Transmission or Distribution facilities (221121 or 221122) 
+# and their specific NAICS Industry Codes and the county subdivision (AdministrativeRegion_3) they are located in.
+
+SELECT ?facility ?industryName ?region WHERE {
+    ?facility a fio:Facility;
+    	rdfs:label ?facilityName;
+    	fio:ofIndustry ?industryGroup;       # all facilities in the Industry Group 3221 or 3222
+    	fio:ofIndustry ?industryCode;          # with all additional industry codes
+    	kwg-ont:sfWithin ?region.              # by administrative region
+    ?region a kwg-ont:AdministrativeRegion_3.  # by county subdivision (Admin Level 3) 
+    ?industryCode a naics:NAICS-IndustryCode;  # only NAICS specific industry codes
+    	       rdfs:label ?industryName. 
+	VALUES ?industryGroup{naics:NAICS-2211}
+  	FILTER (?industryCode!=naics:NAICS-221121 && ?industryCode!=naics:NAICS-221122)
+
+	# part that should be run from spatial 
+}
