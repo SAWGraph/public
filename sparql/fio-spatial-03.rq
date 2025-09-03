@@ -1,24 +1,67 @@
-# Retrieve all facilities of a particular set of industries (for example, all power generation facilities as indicated by the four-digit NAICS code 2211) and the county they are located in (Administrative Regions Level 2) for facilities in a specific administrative region (e.g. the state of Illinois, FIPS code 17).
- 
-PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+# Retrieve all facilities of a particular set of industries (for example, all power generation facilities as indicated by the four-digit NAICS code 2211) and the county they are located in (Administrative Regions Level 2) for facilities in a specific administrative region (e.g. the state of Illinois, FIPS code 17, or the state of Ohio, FIPS code 39).
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX fio: <http://w3id.org/fio/v1/fio#>
+PREFIX naics: <http://w3id.org/fio/v1/naics#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX epa-frs: <http://w3id.org/fio/v1/epa-frs#>
-PREFIX fio: <http://w3id.org/fio/v1/fio#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX naics: <http://w3id.org/fio/v1/naics#>
 PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
-select * where {
-        ?facility rdf:type epa-frs:EPA-PFAS-Facility ;
-    		fio:ofIndustry ?code .
-        	?code 	fio:subcodeOf ?icode ;
-    				rdfs:label ?code_label .
-    	FILTER (?icode IN (naics:NAICS-2211))
-		?facility kwg-ont:sfWithin | kwg-ont:sfOverlaps  ?region .
-    SERVICE <repository:Spatial> {
-		?region rdf:type kwg-ont:AdministrativeRegion_3 .
-		?region kwg-ont:administrativePartOf ?county.
-        ?county kwg-ont:administrativePartOf kwgr:administrativeRegion.USA.17;
-        		rdf:type kwg-ont:AdministrativeRegion_2;
-				rdfs:label ?countyName. 
-	}
-	}
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+
+
+# Retrieve all facilities in the NAICS Industry Code 22111
+# and their specific NAICS Industry Codes and the county subdivision (AdministrativeRegion_3) they are located in.
+SELECT DISTINCT ?facility (concat('[',group_concat(DISTINCT ?industryName;separator='; '),']') as ?industries) ?county  WHERE {
+
+SERVICE <repository:test-fio>
+	{{
+      ?facility a fio:Facility;
+        rdfs:label ?facilityName;
+        fio:ofIndustry ?industryGroup;       # all facilities in the Industry Group 3221 or 3222
+        fio:ofIndustry ?industryCode;          # with all additional industry codes
+        kwg-ont:sfWithin ?county.              # by administrative region
+        #?town a kwg-ont:AdministrativeRegion_3.  # by county subdivision (should be Admin Level 3)
+        ?industryCode a naics:NAICS-IndustryCode;  # only NAICS specific industry codes
+           fio:subcodeOf ?industryGroup ;
+           rdfs:label ?industryName.
+        VALUES ?industryGroup{naics:NAICS-22111}
+	}}
+    SERVICE <repository:Spatial>     
+	{{
+        ?county rdf:type kwg-ont:AdministrativeRegion_2 ;
+            rdfs:label ?countylabel .
+    	#?town kwg-ont:administrativePartOf ?county .
+        #?county rdf:type kwg-ont:AdministrativeRegion_2 . # need this if facilities are linked to AdministrativeRegions_3
+        ?county kwg-ont:administrativePartOf kwgr:administrativeRegion.USA.39 .
+        }} 
+    
+} GROUP BY ?facility ?county
+
+	
+### FRINK version ###
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX fio: <http://w3id.org/fio/v1/fio#>
+PREFIX naics: <http://w3id.org/fio/v1/naics#>
+PREFIX epa-frs: <http://w3id.org/fio/v1/epa-frs#>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+# Retrieve all facilities in the NAICS Industry Code 22111
+# and their specific NAICS Industry Codes and the county subdivision (AdministrativeRegion_3) they are located in.
+#SELECT DISTINCT ?facility (concat('[',group_concat(DISTINCT ?industryName;separator='; '),']') as ?industries) ?region  
+SELECT *
+WHERE {
+         ?facility a fio:Facility;
+#            rdfs:label ?facilityName;
+            fio:ofIndustry naics:NAICS-22111;       # all facilities in the Industry Group 22111
+        fio:ofIndustry ?industryCode.          # with all additional industry codes
+           # by administrative region
+         ?industryCode a naics:NAICS-IndustryCode;  # only NAICS specific industry codes
+               fio:subcodeOf naics:NAICS-22111.
+       ?facility kwg-ont:sfWithin ?region.   
+       ?region kwg-ont:administrativePartOf kwgr:administrativeRegion.USA.39;
+                rdf:type kwg-ont:AdministrativeRegion_2;
+                rdfs:label ?countyName.
+
+} #GROUP BY ?facility ?region
+Limit 40
