@@ -33,6 +33,8 @@ Current Namespaces:
 @prefix dc:           <http://purl.org/dc/elements/1.1/> .
 @prefix dcgeoid:      <https://datacommons.org/browser/geoId/> .
 @prefix dcterms:      <http://purl.org/dc/terms/> .                            # sawgraph-spatial-ontology.ttl uses terms:
+@prefix epa-frs:      <http://w3id.org/fio/v1/epa-frs#> .
+@prefix epa-frs-data: <http://w3id.org/fio/v1/epa-frs-data#> .
 @prefix example:      <http://example.com/0000003> .
 @prefix fio:          <http://w3id.org/fio/v1/fio#> .
 @prefix gcx_cid:      <https://geoconnex.us/nhdplusv2/comid/> .                # This is temporary and will likely change.
@@ -45,11 +47,11 @@ Current Namespaces:
 @prefix il_isgs_data: <http://sawgraph.spatialai.org/v1/il-isgs-data#> .
 @prefix kwg-ont:      <http://stko-kwg.geog.ucsb.edu/lod/ontology/> .
 @prefix kwgr:         <http://stko-kwg.geog.ucsb.edu/lod/resource/> .
-@prefix me_egad:      <http://sawgraph.spatialai.org/v1/me-egad#> .
-@prefix me_egad_data: <http://sawgraph.spatialai.org/v1/me-egad-data#> .
+@prefix me_egad:      <http://w3id.org/sawgraph/v1/me-egad#> .                 # previously @prefix me_egad: <http://sawgraph.spatialai.org/v1/me-egad#> .
+@prefix me_egad_data: <http://w3id.org/sawgraph/v1/me-egad-data#> .            # previously @prefix me_egad_data: <http://sawgraph.spatialai.org/v1/me-egad-data#> .
 @prefix me_mgs:       <http://sawgraph.spatialai.org/v1/me-mgs#> .
 @prefix me_mgs_data:  <http://sawgraph.spatialai.org/v1/me-mgs-data#> .
-@prefix naics:        <http://sawgraph.spatialai.org/v1/fio/naics#> .
+@prefix naics:        <http://w3id.org/fio/v1/naics#> .                        # previously @prefix naics: <http://sawgraph.spatialai.org/v1/fio/naics#> .
 @prefix nhdplusv2:    <http://nhdplusv2.spatialai.org/v1/nhdplusv2#> .
 @prefix obo:          <http://purl.obolibrary.org/obo/> .
 @prefix owl:          <http://www.w3.org/2002/07/owl#> .
