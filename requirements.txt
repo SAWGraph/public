@@ -1,0 +1,10 @@
+streamlit
+folium
+streamlit-folium
+geopandas
+pandas
+shapely
+SPARQLWrapper
+rdflib
+branca
+mapclassify

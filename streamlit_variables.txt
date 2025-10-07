@@ -1,0 +1,37 @@
+What samples in Maine are near landfill or DOD sites?
+introduce the following variables:
+
+Find Samples Near Facilities.
+Filter by:
+- Administrative Region (?county - not yet in query)
+	- will provide more details
+
+- Kind of Facility (?industry): 
+	- start out with the following example NAICS codes:  
+		5622 (Waster Treatment and Disposal)
+		92811 (National Security)
+		22132 (Sewage Treatment Facilies) 22131 (Water Supply and Irrigation Systems)
+		3222 (Converted Paper Product Manufacturing)
+		3261 (Plastics Product Manufacturing)
+		3133 (Textile and Fabric Finishing and Coating)
+		3251 (Basic Chemical Manufacturing)
+		
+	- expand to free text search for codes (at any level)
+	- allow multiple selections
+
+- Sample Type (?type - instead of filtering by the rdfs:label, filter directly by coso:sampleOfMaterialType ?type were ?type is any of the URIS: me_egad_data.sampleMaterialTypeQualifier.X ):
+	- water: groundwater (.GW), surface water (.SW)
+	- soil (.SL)
+	- sediment (.SD)
+	- vegetation (.V)
+	- leachate (.L), waste water (.WW), sludge (.SU), process water (.PW), stormwater runoff (.SR)
+	- animal tissue: whole fish (.WH), skinless fish fillet (.SF),  liver (.LV)
+
+
+- Tested chemical (?substance; also filter on the substance itself: coso:ofSubstance ?substance rather than the label of it (remove the /skos:altLabel part)
+	- start out with list of 10: PFOS,  PFOA, PFBA, PFBEA, PFBS, PFHPA, PFHXS, PFHXA, PFHPS, PFNA, PFDA
+	These are all denoted by the URIs me_egad_data:parameter.XXXX_A
+
+- Concentration (?result)
+	- min and max values (either one is optional, use defaults of min=4 and max=1000)
+
