@@ -1,8 +1,10 @@
 # All samples from sample points in Penobscot county
 
+### Graph DB version
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
+PREFIX spatial: <http://purl.org/spatialai/spatial/spatial-full#>
 PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
 PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
 PREFIX coso: <http://w3id.org/coso/v1/contaminoso#>
@@ -10,7 +12,7 @@ PREFIX coso: <http://w3id.org/coso/v1/contaminoso#>
 SELECT DISTINCT ?sample ?sp WHERE {
     SERVICE <repository:Spatial> {
 			?s2cell rdf:type kwg-ont:S2Cell_Level13 .
-        	?s2cell kwg-ont:sfWithin | kwg-ont:sfOverlaps kwgr:administrativeRegion.USA.23019 .
+        	?s2cell spatial:ConnectedTo kwgr:administrativeRegion.USA.23019 .
     }
     SERVICE <repository:PFAS>
     {
@@ -18,4 +20,22 @@ SELECT DISTINCT ?sample ?sp WHERE {
         ?sample coso:fromSamplePoint ?sp .
         ?sp kwg-ont:sfWithin ?s2cell.
     }        
+} 
+
+
+### FRINK version
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+PREFIX spatial: <http://purl.org/spatialai/spatial/spatial-full#>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+PREFIX coso: <http://w3id.org/coso/v1/contaminoso#>
+
+SELECT DISTINCT ?sample ?sp WHERE {
+  ?s2cell rdf:type kwg-ont:S2Cell_Level13 .
+  ?s2cell spatial:connectedTo kwgr:administrativeRegion.USA.23019 .
+  ?sample a coso:MaterialSample .
+  ?sample coso:fromSamplePoint ?sp .
+  ?sp kwg-ont:sfWithin ?s2cell.
 } 

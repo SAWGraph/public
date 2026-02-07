@@ -1,6 +1,8 @@
 # Federated queries: FIO with SpatialGraph 
 # CQ 1
 # Retrieve all landfills (indicated by the six-digit NAICS code 562212) and the town they are located in or close to
+
+### GraphDB version
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX fio: <http://w3id.org/fio/v1/fio#>
@@ -26,4 +28,25 @@ where {
         	rdfs:label ?townlabel .
     }
 
+}
+
+
+### FRINK version
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX fio: <http://w3id.org/fio/v1/fio#>
+PREFIX naics: <http://w3id.org/fio/v1/naics#>
+PREFIX epa-frs: <http://w3id.org/fio/v1/epa-frs#>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX spatial: <http://purl.org/spatialai/spatial/spatial-full#> 
+
+SELECT DISTINCT * #?facility ?code_label ?town ?townlabel 
+WHERE {
+  VALUES ?code{naics:NAICS-562212}
+  ?facility rdf:type epa-frs:EPA-PFAS-Facility ;
+            fio:ofIndustry ?code;
+            kwg-ont:sfWithin ?town .
+  ?code rdfs:label ?code_label.
+  ?town rdf:type kwg-ont:AdministrativeRegion_3 .
+  ?town rdfs:label ?townlabel .
 }

@@ -1,0 +1,64 @@
+# Find all the S2 cells in the town of Auburn, Androscoggin County, Maine, that grow root vegetables and have PFAS contamination detected in soil samples at 4 ng/L or above.
+
+PREFIX spatial: <http://purl.org/spatialai/spatial/spatial-full#>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+PREFIX coso: <http://w3id.org/coso/v1/contaminoso#>
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX unit: <http://qudt.org/vocab/unit/>
+PREFIX dcgeoid: <https://datacommons.org/browser/geoId/>
+PREFIX ag: <http://w3id.org/sawgraph/v1/ag#> 
+
+SELECT * WHERE { 
+  	SERVICE <repository:PFAS> {
+        SELECT DISTINCT ?s2Cell (Count(?quantity) as ?numExceeds) {
+            # Filter to those S2 cells with some samplepoint
+            ?sample a coso:MaterialSample ;
+            coso:fromSamplePoint ?sp .
+            # Limit to relevant region
+            ?sp kwg-ont:sfWithin dcgeoid:2300102060 .
+            # Find and filter material sample type
+            ?sample coso:sampleOfMaterialType ?st ;
+            rdf:type ?sampleCategory.
+            VALUES ?samplecategories{coso:SoilSample} .
+            
+            ?observation coso:analyzedSample ?sample ;
+            coso:hasResult/qudt:quantityValue ?result. 
+            ?result qudt:numericValue ?quantity ;
+    				qudt:hasUnit ?unit .					 		
+            VALUES ?unit {unit:NanoGM-PER-L}. 
+            FILTER ( ?quantity > 4)
+            # Also retrievel the S2 cells of the relevant samples points for integration with crops
+            ?sp kwg-ont:sfWithin ?s2Cell .
+            ?s2Cell rdf:type kwg-ont:S2Cell_Level13 .
+        }GROUP BY ?s2Cell        
+    }
+    SERVICE <repository:CropsAndSoil> {
+        SELECT DISTINCT ?cropSubCategory {
+            # Find all cropland observation collections for each S2 cell
+            ?s2Cell sosa:isFeatureOfInterestOf ?croplandObsCollection .
+            
+            # Ensure the observation collection is for the year 2021
+            ?croplandObsCollection sosa:phenomenonTime kwgr:instant.2021 .
+            ?croplandObsCollection rdf:type kwg-ont:CroplandS2OverlapObservationCollection .
+            
+            # Find all observations for each cropland observation collection
+            ?croplandObsCollection sosa:hasMember ?observation .
+            
+            # Retrieve crop type for each observation
+            ?observation sosa:observedProperty ?observedProperty .
+            ?observedProperty ag:hasCropSubCategory ?cropSubCategory .
+            ?observedProperty ag:hasCropSubCategory ag:cropSubCategory.RootOrTuberVegetable .
+        }
+    }
+} ORDER BY ?s2Cell limit 1000
+
+
+            
+            
+            
+
+
