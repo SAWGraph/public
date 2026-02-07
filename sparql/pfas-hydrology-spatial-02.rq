@@ -29,7 +29,7 @@ SELECT DISTINCT ?samp_pt (AVG(?detected) AS ?avg_detected) (Count(?detected) as 
 
   ?s2cell rdf:type kwg-ont:S2Cell_Level13 ;
 		spatial:connectedTo ?ar3 .
-   ?ar3 kwg-ont:administrativePartOf+ kwgr:administrativeRegion.USA.23011 .#in selected county
+   ?ar3 kwg-ont:administrativePartOf+ kwgr:administrativeRegion.USA.23011 .#in selected county or state
   
     ?obs coso:observedAtSamplePoint ?samp_pt;
         coso:ofSubstance ?substance;
@@ -50,14 +50,14 @@ SELECT DISTINCT ?samp_pt (AVG(?detected) AS ?avg_detected) (Count(?detected) as 
         	me_mgs:ofWellType me_mgs_data:d.wellType.Bedrock; # all Gravel wells
         	me_mgs:wellDepth ?wellDepth.
         ?wellDepth qudt:numericValue ?depth_val.
-        FILTER(?depth_val > 10) #get rid of wells with depth less than 10
+        FILTER(?depth_val > 100) #get rid of wells with depth less than 10
     	FILTER (isNumeric(?depth_val) && ?depth_val != "NaN"^^xsd:double) #get rid of wells with no depth value
 
 
   FILTER NOT EXISTS {?s2cell spatial:connectedTo ?s2cell_gravel .
     	?s2cell_gravel rdf:type kwg-ont:S2Cell_Level13 ;
 		spatial:connectedTo ?ar3.
-   		?ar3 kwg-ont:administrativePartOf+ kwgr:administrativeRegion.USA.23011 .#in selected county
+   		?ar3 kwg-ont:administrativePartOf+ kwgr:administrativeRegion.USA.23011 .#in selected county or state
 	  	# limiting results to those that have a gravel well in them
         ?well2 a me_mgs:MGS-Well;
         	me_mgs:ofWellType me_mgs_data:d.wellType.Gravel; # all Gravel wells
