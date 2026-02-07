@@ -1,0 +1,56 @@
+# Finding sample points with detect results for a particular PFAS (here the sum of PFOA and PFOS) that are near some gravel well. 
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+PREFIX spatial: <http://purl.org/spatialai/spatial/spatial-full#>
+
+PREFIX coso: <http://w3id.org/coso/v1/contaminoso#>
+prefix me_egad: <http://w3id.org/sawgraph/v1/me-egad#>
+PREFIX me_mgs: <http://sawgraph.spatialai.org/v1/me-mgs#>
+PREFIX me_mgs_data: <http://sawgraph.spatialai.org/v1/me-mgs-data#>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+PREFIX unit: <http://qudt.org/vocab/unit/>
+
+SELECT DISTINCT ?samp_pt (AVG(?detected)AS?avg_detected) (Count(?detected) as ?no_detects) ?s2cell
+WHERE {
+    # Find sample points that are associated with wells (Maine EGAD Public or Private Wells)
+   ?samp_pt rdf:type coso:SamplePoint ;
+        #geo:hasGeometry/geo:asWKT ?spgeom_wkt;
+        kwg-ont:sfWithin ?s2cell; # by s2 location
+        me_egad:samplePointType ?samp_type.
+        VALUES ?samp_type{me_egad:featureType.PWSW me_egad:featureType.PUWSW} # that are private or public EGAD wells
+
+  ?obs coso:observedAtSamplePoint ?samp_pt;
+        coso:ofSubstance ?substance;
+        coso:hasResult ?result.
+        ?substance skos:altLabel ?substanceLabel.
+        ?result qudt:quantityValue ?quantity. 
+  		?quantity qudt:numericValue ?detected; #with some detected quantity
+			qudt:hasUnit ?unit.
+        OPTIONAL{?result me_egad:labQualifier ?labqual}
+        FILTER NOT EXISTS{?result me_egad:labQualifier ?labqual}
+        FILTER(?substanceLabel = "PFOA + PFOS")
+        FILTER(?unit = unit:NanoGM-PER-L) #Gets rid of results not in ng/l
+        FILTER(?detected < 4126) #filter out outliers (4125.99 = 90th percentile for gravel)
+ 
+   ?s2cell rdf:type kwg-ont:S2Cell_Level13 ;
+		spatial:connectedTo ?ar3.
+   ?ar3 kwg-ont:administrativePartOf+ kwgr:administrativeRegion.USA.23011 .#in selected county
+
+  # limiting results to those that have a gravel well in their S2 neighborhood
+   ?s2_neighborhood kwg-ont:sfTouches | owl:sameAs ?s2cell ; #S2 cell neighborhood (S2 cell  and its 8 neighbors)
+			spatial:connectedTo ?well. #with neighborhood containing
+        ?well a me_mgs:MGS-Well;
+        	me_mgs:ofWellType me_mgs_data:d.wellType.Gravel; # all Gravel wells
+        	me_mgs:wellDepth ?wellDepth.
+        ?wellDepth qudt:numericValue ?depth_val.
+        FILTER(?depth_val > 10) #get rid of wells with depth less than 10
+    	FILTER (isNumeric(?depth_val) && ?depth_val != "NaN"^^xsd:double) #get rid of wells with no depth value
+
+} GROUP BY ?samp_pt ?s2cell 
