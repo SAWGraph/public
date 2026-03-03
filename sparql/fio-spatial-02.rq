@@ -18,7 +18,7 @@ select ?facility ?facilitylabel ?s2 ?townlabel where {
     {
      ?facility rdf:type epa-frs:EPA-PFAS-Facility ;
     		fio:ofIndustry naics:NAICS-562212 ;
-        	kwg-ont:sfWithin ?town , ?s2.
+        	spatial:connectedTo ?town , ?s2.
        ?s2 rdf:type kwg-ont:S2Cell_Level13 .
 	   ?town rdf:type kwg-ont:AdministrativeRegion_3 .
         OPTIONAL{?facility rdfs:label ?facilitylabel}
@@ -27,9 +27,9 @@ select ?facility ?facilitylabel ?s2 ?townlabel where {
     {
         # Select towns and find the S2 cells they have in common with the above S2 cells
         ?s2 spatial:connectedTo ?town .
-        ?town rdf:type kwg-ont:AdministrativeRegion_3 ;
-        spatial:connectedTo* kwgr:administrativeRegion.USA.23 ;
-        rdfs:label ?townlabel .
+  		?town rdf:type kwg-ont:AdministrativeRegion_3 ;
+        	kwg-ont:administrativePartOf+  kwgr:administrativeRegion.USA.23 ;
+        	rdfs:label ?townlabel .
     }
 
 } 
@@ -51,13 +51,12 @@ PREFIX spatial: <http://purl.org/spatialai/spatial/spatial-full#>
 SELECT ?facility ?facilitylabel ?s2 ?townlabel WHERE {
   ?facility rdf:type epa-frs:EPA-PFAS-Facility ;
             fio:ofIndustry naics:NAICS-562212 ;
-            kwg-ont:sfWithin ?town , ?s2.
+            spatial:connectedTo ?town , ?s2.
   ?s2 rdf:type kwg-ont:S2Cell_Level13 .
-  ?town rdf:type kwg-ont:AdministrativeRegion_3 .
+  ?town rdf:type kwg-ont:AdministrativeRegion_3 ;
+        kwg-ont:administrativePartOf+  kwgr:administrativeRegion.USA.23 ;
+        rdfs:label ?townlabel .
   OPTIONAL{?facility rdfs:label ?facilitylabel}
   # Select towns and find the S2 cells they have in common with the above S2 cells
   ?s2 spatial:connectedTo ?town .
-  ?town rdf:type kwg-ont:AdministrativeRegion_3 ;
-        spatial:connectedTo* kwgr:administrativeRegion.USA.23 ;
-        rdfs:label ?townlabel .
 } 
