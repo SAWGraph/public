@@ -1,7 +1,7 @@
 
 # Federated queries: FIO with SpatialGraph (S2L13 and AdminRegions)
 # CQ 2
-# Retrieve all landfills (indicated by the six-digit NAICS code 562212) in Penbobscot County. Retrieve their S2 cell location and town name.)
+# Retrieve all landfills (indicated by the six-digit NAICS code 562212) in Penobscot County. Retrieve their S2 cell location and town name.)
 
 ### GraphDB version
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
