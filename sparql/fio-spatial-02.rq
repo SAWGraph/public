@@ -35,10 +35,7 @@ select ?facility ?facilitylabel ?s2 ?townlabel where {
 } 
 
 
-### FRINK version (does not return results as of 2025/09/18)
-# Possibly comment out the OPTIONAL line
-# Changing spatial:connectedTo* to kwg-ont:administrativePartOf/kwg-ont:administrativePartOf seems to help
-# Add DISTINCT to SELECT statement
+### FRINK version 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX fio: <http://w3id.org/fio/v1/fio#>
