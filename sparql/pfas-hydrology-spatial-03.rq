@@ -71,7 +71,7 @@ WHERE {
 # Retrieve all possible labels of the substances
 OPTIONAL { ?substanceURI skos:altLabel ?shortLabel . }
 OPTIONAL { ?substanceURI dcterms:alternative ?altLabel . }
-OPTIONAL { ?substanceURI rdfs:label ?fullLlabel . }
-# Use a fallback menchanism to bind the labels, using the first one it finds
+OPTIONAL { ?substanceURI rdfs:label ?fullLabel . }
+# Use a fallback mechanism to bind the labels, using the first one it finds
 BIND(COALESCE(?shortLabel, ?altLabel, ?fullLabel) AS ?substance)
 }
