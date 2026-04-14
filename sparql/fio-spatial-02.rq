@@ -1,7 +1,7 @@
 
 # Federated queries: FIO with SpatialGraph (S2L13 and AdminRegions)
 # CQ 2
-# Retrieve all landfills (indicated by the six-digit NAICS code 562212) in Penbobscot County. Retrieve their S2 cell location and town name.)
+# Retrieve all landfills (indicated by the six-digit NAICS code 562212) in Penobscot County. Retrieve their S2 cell location and town name.)
 
 ### GraphDB version
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -18,7 +18,7 @@ select ?facility ?facilitylabel ?s2 ?townlabel where {
     {
      ?facility rdf:type epa-frs:EPA-PFAS-Facility ;
     		fio:ofIndustry naics:NAICS-562212 ;
-        	kwg-ont:sfWithin ?town , ?s2.
+        	spatial:connectedTo ?town , ?s2.
        ?s2 rdf:type kwg-ont:S2Cell_Level13 .
 	   ?town rdf:type kwg-ont:AdministrativeRegion_3 .
         OPTIONAL{?facility rdfs:label ?facilitylabel}
@@ -27,18 +27,15 @@ select ?facility ?facilitylabel ?s2 ?townlabel where {
     {
         # Select towns and find the S2 cells they have in common with the above S2 cells
         ?s2 spatial:connectedTo ?town .
-        ?town rdf:type kwg-ont:AdministrativeRegion_3 ;
-        spatial:connectedTo* kwgr:administrativeRegion.USA.23 ;
-        rdfs:label ?townlabel .
+  		?town rdf:type kwg-ont:AdministrativeRegion_3 ;
+        	kwg-ont:administrativePartOf+  kwgr:administrativeRegion.USA.23 ;
+        	rdfs:label ?townlabel .
     }
 
 } 
 
 
-### FRINK version (does not return results as of 2025/09/18)
-# Possibly comment out the OPTIONAL line
-# Changing spatial:connectedTo* to kwg-ont:administrativePartOf/kwg-ont:administrativePartOf seems to help
-# Add DISTINCT to SELECT statement
+### FRINK version 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX fio: <http://w3id.org/fio/v1/fio#>
@@ -51,13 +48,12 @@ PREFIX spatial: <http://purl.org/spatialai/spatial/spatial-full#>
 SELECT ?facility ?facilitylabel ?s2 ?townlabel WHERE {
   ?facility rdf:type epa-frs:EPA-PFAS-Facility ;
             fio:ofIndustry naics:NAICS-562212 ;
-            kwg-ont:sfWithin ?town , ?s2.
+            spatial:connectedTo ?town , ?s2.
   ?s2 rdf:type kwg-ont:S2Cell_Level13 .
-  ?town rdf:type kwg-ont:AdministrativeRegion_3 .
+  ?town rdf:type kwg-ont:AdministrativeRegion_3 ;
+        kwg-ont:administrativePartOf+  kwgr:administrativeRegion.USA.23 ;
+        rdfs:label ?townlabel .
   OPTIONAL{?facility rdfs:label ?facilitylabel}
   # Select towns and find the S2 cells they have in common with the above S2 cells
   ?s2 spatial:connectedTo ?town .
-  ?town rdf:type kwg-ont:AdministrativeRegion_3 ;
-        spatial:connectedTo* kwgr:administrativeRegion.USA.23 ;
-        rdfs:label ?townlabel .
 } 
