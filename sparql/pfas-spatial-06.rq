@@ -1,0 +1,71 @@
+# Find all the sample observations within a specific administrative region (here USA.23 for Maine) from private water supply wells (PWSW) for specific PFAS (using substanceURI). This query retrieves detects and non-detects using two separate optional statements
+
+
+PREFIX coso: <http://w3id.org/coso/v1/contaminoso#>
+PREFIX me_egad: <http://w3id.org/sawgraph/v1/me-egad#>
+PREFIX qudt: <http://qudt.org/schema/qudt/>
+
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+PREFIX spatial: <http://purl.org/spatialai/spatial/spatial-full#>
+PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+SELECT DISTINCT ?samplePoint ?spWKT
+       ?obs ?substance ?sampleType ?numericResult ?numericUnit ?enumeratedValue
+WHERE {
+  	# geographic area of interest
+    ?regionURI rdf:type kwg-ont:AdministrativeRegion_3 ; kwg-ont:administrativePartOf+ kwgr:administrativeRegion.USA.23 .
+    ?samples2 spatial:connectedTo ?regionURI .
+    ?samples2 rdf:type kwg-ont:S2Cell_Level13 .
+  	
+  	# sample points 
+    ?samplePoint rdf:type coso:SamplePoint ;
+        geo:hasGeometry/geo:asWKT ?spWKT ;
+        kwg-ont:sfWithin ?samples2 .
+    #OPTIONAL { ?samplePoint rdfs:label ?samplePointName }
+  
+  # temporary solution to restrict samples to Private Water Supply Wells (works only in EGAD)
+  	?samplePoint rdf:type me_egad:EGAD-SamplePoint ;
+        me_egad:samplePointType me_egad:featureType.PWSW . 
+
+    ?obs rdf:type coso:ContaminantObservation ;
+         coso:observedAtSamplePoint ?samplePoint ;
+         coso:ofDSSToxSubstance ?substanceURI ;
+         coso:hasResult ?resultNode .
+    ?resultNode qudt:quantityValue ?value .
+    OPTIONAL {    ?value qudt:numericValue ?numericValue. 
+					FILTER (?numericValue >= 0)  # Group numeric filters with the OPTIONAL part
+					FILTER (?numericValue <= 500)
+				?value qudt:hasUnit ?unitURI.
+  				VALUES ?unitURI { <http://qudt.org/vocab/unit/NanoGM-PER-L> } # Group unit filter with the OPTIONAL part
+    			?unitURI qudt:symbol ?numericUnit .
+  }
+    OPTIONAL {?value qudt:enumeratedValue ?enumeratedValue. }
+
+	# combining detect and non-detect into a single value 
+
+	# combining detect and non-detect into a single value 
+  BIND(COALESCE(?numericValue,"0"^^xsd:decimal) AS ?numericResult )
+
+   #VALUES ?substanceURI { <http://w3id.org/DSSTox/v1/DTXSID3031864> }
+
+    # Other optional information
+    OPTIONAL { ?obs coso:analyzedSample ?sample }
+    OPTIONAL { ?sample dcterms:identifier ?sampleIdentifier }
+    OPTIONAL { ?obs coso:observedTime ?date }
+    OPTIONAL { ?sample coso:sampleOfMaterialType/rdfs:label ?sampleType }
+
+# Retrieve all possible labels of the substances
+OPTIONAL { ?substanceURI skos:altLabel ?shortLabel . }
+OPTIONAL { ?substanceURI dcterms:alternative ?altLabel . }
+OPTIONAL { ?substanceURI rdfs:label ?fullLlabel . }
+# Use a fallback menchanism to bind the labels, using the first one it finds
+BIND(COALESCE(?shortLabel, ?altLabel, ?fullLabel) AS ?substance)
+}
