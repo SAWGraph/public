@@ -35,7 +35,7 @@ Examples
 - `egad:1234`
 
 # Versioning
-Integers are used for version numbers. ABox version numbers (for sets of triples) are not tied to TBox version numbers. ABox version numbers increase when new data is involved, which may be additional data or additional attributes for current data.
+Integers are used for version numbers. ABox version numbers (for sets of triples) are not tied to TBox version numbers. ABox version numbers increase when new data is involved, which may be additional data or additional attributes for current data, but do not change for minor updates or error corrections.
 
 # Provenance
 
