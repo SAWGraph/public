@@ -39,6 +39,11 @@ Examples
 ## TBox example
 Ontology
 ```
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix me_egad: <http://w3id.org/sawgraph/v1/me-egad#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+
 <http://w3id.org/sawgraph/v1/me-egad> rdf:type owl:Ontology ;
                                       dcterms:issued "2026-03-11"^^xsd:date ;
                                       prov:wasAttributedTo <https://sawgraph.github.io> .
@@ -52,15 +57,32 @@ me_egad:associatedSite rdf:type owl:ObjectProperty ;
 ## ABox example
 Dataset
 ```
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/> .
+@prefix me_egad_data: <http://w3id.org/sawgraph/v1/me-egad-data#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix stad: <http://purl.org/spatialai/stad/v2/core/> .
+
 <http://w3id.org/sawgraph/v2/me-egad-data> rdf:type owl:Ontology ;
                                            dcterms:issued "2024-07-26" ;   #first triplification release at this version
                                            dcterms:modified "2026-04-17" ; #date of last triplification at this version
-                                           prov:wasDerivedFrom <me_egad_data:sourceDataset> .
-<me_egad_data:sourceDataset> rdf:type stad:Dataset ;
-                             dcterms:issued "2026-01-01" ;  #dataset publication date
-                             dcterms:source <https://www.maine.gov/dep/maps-data/egad/> ;
-                             stad:hasSpatialCoverage <kwg-ont:Maine> ;
-                             stad:hasTemporalCoverage .
+                                           prov:wasDerivedFrom me_egad_data:sourceDataset .
+me_egad_data:sourceDataset rdf:type stad:Dataset ;
+                           dcterms:issued "2026-01-01" ;  #dataset publication date
+                           dcterms:source <https://www.maine.gov/dep/maps-data/egad/> ;
+                           stad:hasSpatialCoverage kwgr:administrativeRegion.USA.23 ;
+                           stad:hasTemporalCoverage me_egad_data:temporalCoverage .
+me_egad_data:temporalCoverage a time:ProperInterval ;
+                              time:hasBeginning me_egad_data:temporalCoverage.start ;
+                              time:hasEnd me_egad_data:temporalCoverage.end ;
+                              time:hasDurationDescription me_egad_data:temporalCoverage.duration .
+me_egad_data:temporalCoverage.start a time:Instant ;
+                                    time:inXSDDateTime "2022-01-01T05:00:00Z"^^xsd:dateTime .
+me_egad_data:temporalCoverage.end a time:Instant ;
+                                  time:inXSDDateTime "2026-01-01T05:00:00Z"^^xsd:dateTime .
+me_egad_data:temporalCoverage.duration a time:DurationDescription ;
+                                       time:years "5"^^xsd:decimal .
 ```
 Instances
 ```
