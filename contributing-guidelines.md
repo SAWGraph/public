@@ -74,11 +74,13 @@ Spatial and temporal coverage are optional but recommended. If the ABox is compr
 @prefix stad: <http://purl.org/spatialai/stad/v2/core/> .
 
 <http://w3id.org/sawgraph/v2/me-egad-data> rdf:type owl:Ontology ;
-                                           dcterms:issued "2024-07-26" ;   #first triplification release at this version
-                                           dcterms:modified "2026-04-17" ; #date of last triplification at this version
-                                           prov:wasDerivedFrom me_egad_data:sourceDataset .
+                                           dcterms:issued "2024-07-26"^^xsd:date ;   #first triplification release at this version
+                                           dcterms:modified "2026-04-17"^^xsd:date ; #date of last triplification at this version
+                                           prov:wasDerivedFrom me_egad_data:sourceDataset ;
+                                           owl:versionInfo "2.0"@en .
 me_egad_data:sourceDataset rdf:type stad:Dataset ;
-                           dcterms:issued "2026-01-01" ;  #dataset publication date
+                           rdfs:label "Statewide EGAD PFAS File January 2026"@en ;
+                           dcterms:issued "2026-01-01"^^xsd:date ;  #dataset publication date
                            dcterms:source <https://www.maine.gov/dep/maps-data/egad/> ;
                            stad:hasSpatialCoverage kwgr:administrativeRegion.USA.23 ;
                            stad:hasTemporalCoverage me_egad_data:temporalCoverage .
@@ -87,11 +89,11 @@ me_egad_data:temporalCoverage a time:ProperInterval ;
                               time:hasEnd me_egad_data:temporalCoverage.end ;
                               time:hasDurationDescription me_egad_data:temporalCoverage.duration .
 me_egad_data:temporalCoverage.start a time:Instant ;
-                                    time:inXSDDateTime "2022-01-01T05:00:00Z"^^xsd:dateTime .
+                                    time:inXSDDate "2007-10-31"^^xsd:date .
 me_egad_data:temporalCoverage.end a time:Instant ;
-                                  time:inXSDDateTime "2026-01-01T05:00:00Z"^^xsd:dateTime .
+                                  time:inXSDDate "2026-01-04"^^xsd:date .
 me_egad_data:temporalCoverage.duration a time:DurationDescription ;
-                                       time:years "5"^^xsd:decimal .
+                                       time:years "18.2"^^xsd:decimal .
 ```
 **Instances**
 ```
