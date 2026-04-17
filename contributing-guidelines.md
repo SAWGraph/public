@@ -34,7 +34,12 @@ Examples
 - `egad:Observation/1234`
 - `egad:1234`
 
+# Versioning
+Integers are used for version numbers. ABox version numbers (for sets of triples) are not tied to TBox version numbers. ABox version numbers increase when new data is involved, which may be additional data or additional attributes for current data.
+
 # Provenance
+
+`dcterms:issued` is used for releases. `dcterms:modified` is used for small updates that do not change the current version number.
 
 ## TBox example
 This is a minimal example focused on provenance only.
@@ -59,7 +64,7 @@ me_egad:associatedSite rdf:type owl:ObjectProperty ;
 ## ABox example
 **Dataset**
 
-Spatial and temporal coverage are optional but recommended.
+Spatial and temporal coverage are optional but recommended. If the ABox is comprised of multiple files, create a single file that only contains the `owl:Ontology` information and import the data files.
 ```
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/> .
