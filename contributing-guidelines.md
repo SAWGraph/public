@@ -37,7 +37,9 @@ Examples
 # Provenance
 
 ## TBox example
-Ontology
+This is a minimal example focused on provenance only.
+
+**Ontology**
 ```
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix me_egad: <http://w3id.org/sawgraph/v1/me-egad#> .
@@ -48,14 +50,16 @@ Ontology
                                       dcterms:issued "2026-03-11"^^xsd:date ;
                                       prov:wasAttributedTo <https://sawgraph.github.io> .
 ```
-Classes, Properties, and Named Individuals
+**Classes, Properties, and Named Individuals**
 ```
 me_egad:associatedSite rdf:type owl:ObjectProperty ;
                        rdfs:isDefinedBy <http://w3id.org/sawgraph/v1/me-egad> .
 ```
 
 ## ABox example
-Dataset
+**Dataset**
+
+Spatial and temporal coverage are optional but recommended.
 ```
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/> .
@@ -84,7 +88,7 @@ me_egad_data:temporalCoverage.end a time:Instant ;
 me_egad_data:temporalCoverage.duration a time:DurationDescription ;
                                        time:years "5"^^xsd:decimal .
 ```
-Instances
+**Instances**
 ```
 me_egad_data:quantityValue.C0591FS.BNO.20230918.375951 a coso:DetectQuantityValue ;
                                                        rdfs:isDefinedBy <http://w3id.org/sawgraph/v2/me-egad-data> .
