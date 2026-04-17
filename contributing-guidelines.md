@@ -43,7 +43,7 @@ Ontology
                                       dcterms:issued "2026-03-11"^^xsd:date ;
                                       prov:wasAttributedTo <https://sawgraph.github.io> .
 ```
-Classes and Properties
+Classes, Properties, and Named Individuals
 ```
 me_egad:associatedSite rdf:type owl:ObjectProperty ;
                        rdfs:isDefinedBy <http://w3id.org/sawgraph/v1/me-egad> .
@@ -53,18 +53,14 @@ me_egad:associatedSite rdf:type owl:ObjectProperty ;
 Dataset
 ```
 <http://w3id.org/sawgraph/v2/me-egad-data> rdf:type owl:Ontology ;
-                                           dcterms:issued "2024-07-26" ;  #first triplification release
-                                           dcterms:modified "2026-04-17" ; #date of last triplification
-                                           dcterms:description "This ontology supports SAWGraph"@en ;
-                                           dcterms:title "Maine Environmental and Geographic Analysis Database (EGAD) PFAS Dataset"@en ;
-                                           prov:wasDerivedFrom <me_egad_data:sourceDataset>;
-                                           dcterms:source <>;
-                                           owl:versionInfo "2.0"@en .
-<me_egad_data:sourceDataset> rdf:type stad:Dataset;
-                             dcterms:issued "";  #dataset publication date
-                             dcterms:source "http://maine.gov/;
-                             stad:hasSpatialCoverage <kwg-ont:Maine>;
-                             stad:hasTemporalCoverage ;
+                                           dcterms:issued "2024-07-26" ;   #first triplification release at this version
+                                           dcterms:modified "2026-04-17" ; #date of last triplification at this version
+                                           prov:wasDerivedFrom <me_egad_data:sourceDataset> .
+<me_egad_data:sourceDataset> rdf:type stad:Dataset ;
+                             dcterms:issued "2026-01-01" ;  #dataset publication date
+                             dcterms:source <https://www.maine.gov/dep/maps-data/egad/> ;
+                             stad:hasSpatialCoverage <kwg-ont:Maine> ;
+                             stad:hasTemporalCoverage .
 ```
 Instances
 ```
