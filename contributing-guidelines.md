@@ -163,7 +163,7 @@ Recommended additions to most repositories in addition to data:
 | skos | <http://www.w3.org/2004/02/skos/core#> |  |
 | sosa | <http://www.w3.org/ns/sosa/> |  |
 | spatial | <http://purl.org/spatialai/spatial/spatial-full#> |  |
-| stad | <http://purl.org/spatialai/stad/v2/core/> |  |
+| stad | <http://purl.org/spatialai/stad/v2/core#> |  |
 | time | <http://www.w3.org/2006/time#> |  |
 | unit | <http://qudt.org/vocab/unit/> |  |
 | us_nhdplusv2 | <http://nhdplusv2.spatialai.org/v1/nhdplusv2#> |  |
