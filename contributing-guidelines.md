@@ -39,7 +39,9 @@ Integers are used for version numbers. ABox version numbers (for sets of triples
 
 # Provenance
 
-`dcterms:issued` is used for releases. `dcterms:modified` is used for small updates that do not change the current version number.
+`dcterms:issued` is used for releases.
+
+`dcterms:modified` is used for small updates that do not change the current version number.
 
 ## TBox example
 This is a minimal example focused on provenance only.
