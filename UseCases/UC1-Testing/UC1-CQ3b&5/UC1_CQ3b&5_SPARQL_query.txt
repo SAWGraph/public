@@ -1,51 +1,54 @@
-# Use Case 1, Competency Questions 3b & 5
-# What wells are near locations with a reported PFOA contamination above 4ppt?
-# What wells are hydrologically connected to other wells with a reported contamination of above 10ppt?
-#    NOTE: 200ppt is used in the following query
-# 
-# This should be run from the SAWGraph repository
-
-PREFIX coso: <http://sawgraph.spatialai.org/v1/contaminoso#>
+PREFIX coso: <http://w3id.org/coso/v1/contaminoso#>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-PREFIX gwml: <http://www.opengis.net/gwml-main/2.2/>
+PREFIX gwml2: <http://gwml2.org/def/gwml2#>
 PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
 PREFIX me_mgs: <http://sawgraph.spatialai.org/v1/me-mgs#>
-PREFIX me_egad: <http://sawgraph.spatialai.org/v1/me-egad#>
+PREFIX me_egad: <http://w3id.org/sawgraph/v1/me-egad#>
+PREFIX me_egad_data: <http://w3id.org/sawgraph/v1/me-egad-data#>
 PREFIX qudt: <http://qudt.org/schema/qudt/>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX sosa: <http://www.w3.org/ns/sosa/>
-PREFIX unit: <http://qudt.org/vocab/unit>
+PREFIX spatial: <http://purl.org/spatialai/spatial/spatial-full#>
+PREFIX unit: <http://qudt.org/vocab/unit/>
 
-SELECT * WHERE {
-	# Find sample points that are private water supply wells (PWSW)
-    ?samp_pt rdf:type me_egad:EGAD-SamplePoint ;
-             me_egad:samplePointType me_egad:featureType.PWSW .
-	# Find PFOA results for each sample point
-	?obs coso:observedAtSamplePoint ?samp_pt ;
-    	 coso:ofSubstance me_egad:parameter.PFOA_A ;
-    	 sosa:hasResult ?result .
-	# Find numeric results where the unit is ng/L
-    ?result qudt:quantityValue ?quant_val .
-    ?quant_val qudt:numericValue ?num_val ;
-    		   qudt:unit unit:NanoGM-PER-L .
-	# Only consider numeric results above 200 ng/L
-    FILTER(?num_val > 200)
+SELECT DISTINCT ?sp ?sp_wkt ?result ?aq ?aq_wkt ?well ?well_label ?well_wkt
+WHERE {
+  ?sp rdf:type coso:SamplePoint ;
+      me_egad:samplePointType ?sp_type ;
+      spatial:connectedTo ?sp_s2 ;
+      geo:hasGeometry/geo:asWKT ?sp_wkt .
+  ?sp_s2 rdf:type kwg-ont:S2Cell_Level13 ;
+         spatial:connectedTo ?csubd .
+  ?csubd rdf:type kwg-ont:AdministrativeRegion_3 ;
+            kwg-ont:administrativePartOf+ kwgr:administrativeRegion.USA.23005 . 
 
-	# Find the S2 cells each sample point is within
-    ?samp_pt kwg-ont:sfWithin ?sp_s2 .
+  ?obs rdf:type coso:ContaminantObservation ;
+       coso:observedAtSamplePoint ?sp ;
+       coso:ofSubstance ?substance ;
+       coso:hasResult/coso:measurementValue ?result ;
+       coso:hasResult/coso:measurementUnit ?unit .
+  ?substance rdf:type <http://w3id.org/DSSTox/v1/ChemicalEntity> ;
+             skos:altLabel ?substance_label .
 
-    SERVICE <repository:Hydrology> {
-        SELECT * WHERE {
-			# Find aquifers that intersect the sample point S2 cells
-            ?sp_s2 kwg-ont:sfWithin | kwg-ont:sfOverlaps ?aq .
-            ?aq rdf:type gwml:GW_Aquifer .
-			# Find all of the S2 cells for the discovered aquifers
-            ?aq_s2 kwg-ont:sfWithin | kwg-ont:sfOverlaps ?aq .
-        }
-    }
-
-	# Find wells above the aquifers via S2 cells
-    ?well rdf:type me_mgs:MGS-Well .
-    ?well kwg-ont:sfWithin ?aq_s2 .
+  ?aq rdf:type gwml2:GW_Aquifer ;
+      spatial:connectedTo ?sp_s2 ;
+      spatial:connectedTo ?aq_s2 ;
+      geo:hasGeometry/geo:asWKT ?aq_wkt .
+  ?aq_s2 rdf:type kwg-ont:S2Cell_Level13 .
+  
+  ?well rdf:type me_mgs:MGS-Well ;
+        spatial:connectedTo ?aq_s2 ;
+        rdfs:label ?well_label ;
+        geo:hasGeometry/geo:asWKT ?well_wkt .
+#   OPTIONAL { ?well me_mgs:hasUse ?well_useiri }
+#   OPTIONAL { ?well me_mgs:ofWellType ?well_typeiri }
+#   OPTIONAL { ?well me_mgs:wellDepth/qudt:numericValue ?well_depthft }
+#   OPTIONAL { ?well me_mgs:wellOverburden/qudt:numericValue ?well_overburdenft }
+  VALUES ?sp_type { me_egad:featureType.PWSW }
+  VALUES ?substance_label { "PFOA" }
+  VALUES ?unit { unit:NanoGM-PER-L }
+  FILTER(?result > 100)
 }
