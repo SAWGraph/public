@@ -1,44 +1,47 @@
-# Use Case 1, Competency Question 2
-# What surface water bodies are near (same or neighboring S2 cell) landfills or DoD sites?
-# 
-# This should be run from the FIO repository
 
-PREFIX fio: <http://sawgraph.spatialai.org/v1/fio#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX fio: <http://w3id.org/fio/v1/fio#>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 PREFIX hyf: <https://www.opengis.net/def/schema/hy_features/hyf/>
 PREFIX kwg-ont: <http://stko-kwg.geog.ucsb.edu/lod/ontology/>
-PREFIX naics: <http://sawgraph.spatialai.org/v1/fio/naics#>
+PREFIX kwgr: <http://stko-kwg.geog.ucsb.edu/lod/resource/>
+PREFIX me_mgs: <http://sawgraph.spatialai.org/v1/me_mgs#>
+PREFIX naics: <http://w3id.org/fio/v1/naics#>
+PREFIX nhdplusv2: <http://nhdplusv2.spatialai.org/v1/nhdplusv2#>
 PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX schema: <https://schema.org/>
+PREFIX schema1: <http://schema.org/>
+PREFIX spatial: <http://purl.org/spatialai/spatial/spatial-full#>
 
-SELECT * WHERE {
-    # Find facilities, their industry codes, and their S2 cells
-    ?fac rdf:type fio:Facility ;
-            fio:ofIndustry ?code ;
-            kwg-ont:sfWithin ?fac_s2 .
-    # If available, find each facility's name and industry.
-    OPTIONAL { ?fac rdfs:label ?faclabel . }
-    OPTIONAL { ?code rdfs:label ?ind . }
-    # Only keep facilities with NAICS codes for landfills or DoD sites
-    FILTER (?code IN (naics:NAICS-IndustryCode-562212, naics:NAICS-IndustryCode-92811, naics:NAICS-IndustryCode-928110))
-
-    SERVICE <repository:S2L13_AdminRegions> {
-        SELECT * WHERE {
-            # For each facility S2 cell, find its neighbors (and add itself to the neighbors)
-            ?fac_s2 rdf:type kwg-ont:S2Cell_Level13 ;
-                    kwg-ont:sfTouches | owl:sameAs ?nbr_s2 .
-        }
-    }
-
-    SERVICE <repository:Hydrology> {
-        SELECT * WHERE {
-            # Find waterbodies and their names
-            ?wb rdf:type hyf:HY_WaterBody ;
-                rdfs:label ?wblabel .
-	    # Determine if the waterbodies overlap S2 cells that contain a landfill or DoD site or a neighboring S2 cell
-            ?nbr_s2 kwg-ont:sfOverlaps ?wb .
-        }
-    }
+SELECT DISTINCT *
+WHERE {
+    ?facility fio:ofIndustry ?industryGroup ;
+              fio:ofIndustry ?industryCode ;
+              kwg-ont:sfWithin ?facs2 ;
+              spatial:connectedTo ?county ;
+              rdfs:label ?facilityName ;
+              dcterms:alternative ?facilityNameAlt ;
+              schema1:address ?facilityAddress ;
+			  geo:hasGeometry/geo:asWKT ?facwkt .
+    ?county rdf:type kwg-ont:AdministrativeRegion_3 ;
+            kwg-ont:administrativePartOf+ kwgr:administrativeRegion.USA.33 . 
+    ?industryCode a naics:NAICS-IndustryCode ;
+                  fio:subcodeOf ?industryGroup ;
+                  rdfs:label ?industryCodeName .
+    ?industryGroup rdfs:label ?industryGroupName .
+    ?industryGroup fio:subcodeOf ?industrySubsector.
+  VALUES ?industrySubsector {naics:NAICS-326}.
+    ?facs2 rdf:type kwg-ont:S2Cell_Level13 ;
+           kwg-ont:sfTouches|owl:sameAs ?nbrs2 ;
+           geo:hasGeometry/geo:asWKT ?facs2wkt .
+	?nbrs2 spatial:connectedTo ?waterbody ;
+           geo:hasGeometry/geo:asWKT ?nbrs2wkt .
+    ?waterbody rdf:type hyf:HY_WaterBody ;
+	           nhdplusv2:hasFTYPE ?wbftype ;
+		       nhdplusv2:hasReachCode ?wbreachcode ;
+               geo:hasGeometry/geo:asWKT ?wbwkt .
+    OPTIONAL{ ?waterbody  schema:name ?wbname }
 }
+
