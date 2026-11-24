@@ -1,8 +1,8 @@
 # *Use Case 1*: **Testing**
 
-## *Competency Question 2b*: **What surface water bodies are downstream from landfills or DoD sites?**
+## *Competency Question 2b*: **What flowline segments are downstream of facilities of industry *X*?**
 
 This directory contains 
 - a Colab notebook with a link to open it that contains all code, queries, and visualizations,
-- a .txt copy of the primary SPARQL query, and
-- an .html file with the resulting interactive map.
+- a .txt copy of an example of the primary SPARQL query, and
+- an .html file with the resulting interactive map that corresponds to the sample query.
